@@ -38,6 +38,8 @@ function statusLabel(c: Conversation): { text: string; cls: string } {
 export function ChatPanel({ conversation, agentId }: { conversation: Conversation | null; agentId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showBlockModal, setShowBlockModal] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     if (!conversation) return;
@@ -102,6 +104,11 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation?.id]);
 
+  // Reset input when active conversation changes
+  useEffect(() => {
+    setInputText("");
+  }, [conversation?.id]);
+
   const handleToggleControl = async () => {
     if (!conversation) return;
     const db = getClientDb();
@@ -141,6 +148,42 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
       status: "bot_handling",
       requiresHuman: false,
     });
+  };
+
+  const handleSend = async () => {
+    if (!conversation || !inputText.trim() || isSending) return;
+
+    setIsSending(true);
+    const textToSend = inputText.trim();
+    setInputText("");
+
+    try {
+      const response = await fetch("/api/send-as-human", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          conversationId: conversation.id,
+          text: textToSend,
+          operatorName: agentId || "Asesor",
+          channel: conversation.channel,
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        console.error("Error al enviar mensaje:", errData.error);
+        setInputText(textToSend);
+        alert(`Error al enviar mensaje: ${errData.error || "Desconocido"}`);
+      }
+    } catch (err) {
+      console.error("Excepción al enviar mensaje:", err);
+      setInputText(textToSend);
+      alert("Error de conexión al enviar el mensaje.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   if (!conversation) {
@@ -271,6 +314,15 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
                 className={styles.input}
                 type="text"
                 placeholder="Escribe un mensaje"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                disabled={isSending}
               />
               <button className={styles.attachBtn} type="button">📷</button>
             </div>
@@ -280,7 +332,15 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
             <button className={styles.blockBtn} onClick={handleBlock} title="Bloquear">
               🚫
             </button>
-            <button className={styles.sendBtn} type="button">🎤</button>
+            <button 
+              className={`${styles.sendBtn} ${inputText.trim() ? styles.active : ""}`} 
+              type="button"
+              onClick={handleSend}
+              disabled={isSending || !inputText.trim()}
+              title={inputText.trim() ? "Enviar mensaje" : "Escribe un mensaje para enviar"}
+            >
+              {isSending ? "⏳" : inputText.trim() ? "➤" : "🎤"}
+            </button>
           </div>
         )}
       </div>

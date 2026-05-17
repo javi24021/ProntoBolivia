@@ -237,3 +237,66 @@ export async function getRecentMessages(
   });
   return messages.reverse();
 }
+
+/* ============================================================
+ *  CONTROL HUMANO ↔ BOT
+ * ============================================================ */
+
+/**
+ * El asesor humano toma control de la conversación.
+ * El bot dejará de responder automáticamente hasta que se libere.
+ */
+export async function takeOver(
+  conversationId: string,
+  operatorName: string
+): Promise<ServiceResult<void>> {
+  try {
+    const ref = db.collection(COLLECTION).doc(conversationId);
+    await ref.update({
+      status: "human_handling",
+      assignedTo: operatorName,
+      requiresHuman: false, // ya está siendo atendido, no requiere intervención
+      unreadCount: 0,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    log("info", "conversation.service", "Conversación tomada por humano", {
+      conversationId,
+      operatorName,
+    });
+    return { ok: true, data: undefined };
+  } catch (error) {
+    log("error", "conversation.service", "Error en takeOver", {
+      conversationId,
+      error: String(error),
+    });
+    return { ok: false, error: String(error) };
+  }
+}
+
+/**
+ * El asesor humano devuelve la conversación al bot.
+ * El bot retoma la atención automática.
+ */
+export async function releaseToBot(
+  conversationId: string
+): Promise<ServiceResult<void>> {
+  try {
+    const ref = db.collection(COLLECTION).doc(conversationId);
+    await ref.update({
+      status: "bot_handling",
+      assignedTo: null,
+      requiresHuman: false,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    log("info", "conversation.service", "Conversación devuelta al bot", {
+      conversationId,
+    });
+    return { ok: true, data: undefined };
+  } catch (error) {
+    log("error", "conversation.service", "Error en releaseToBot", {
+      conversationId,
+      error: String(error),
+    });
+    return { ok: false, error: String(error) };
+  }
+}

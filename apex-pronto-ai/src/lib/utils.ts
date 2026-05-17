@@ -15,6 +15,11 @@
 export function normalizePhone(raw: string): string {
   if (!raw) return "";
   const trimmed = raw.trim();
+
+  // Si ya es un JID completo (@s.whatsapp.net o @lid), lo dejamos intacto
+  // Esto permite que el sistema use el JID como identificador único.
+  if (trimmed.includes("@")) return trimmed;
+
   const hasPlus = trimmed.startsWith("+");
   const digits = trimmed.replace(/\D/g, "");
   return hasPlus ? `+${digits}` : digits;

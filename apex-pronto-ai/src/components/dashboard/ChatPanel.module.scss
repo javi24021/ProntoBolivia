@@ -306,6 +306,10 @@
   font-size: 20px;
   flex-shrink: 0;
   cursor: pointer;
+
+  &.active {
+    color: #00a884;
+  }
 }
 
 // Control Bar Styles

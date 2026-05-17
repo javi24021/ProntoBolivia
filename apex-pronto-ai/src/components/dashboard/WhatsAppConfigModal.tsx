@@ -11,7 +11,7 @@ interface Props {
 type HealthStatus = "loading" | "connected" | "disconnected" | "error";
 
 const PROVIDER_LABELS: Record<WhatsAppProvider, string> = {
-  evolution: "Evolution API (QR — Gratis)",
+  evolution: "WhatsApp Nativo (Baileys — QR)",
   meta:      "Meta Cloud API (Oficial)",
   n8n:       "n8n Webhook",
   none:      "Ninguno (Modo simulado)",
@@ -224,8 +224,8 @@ export function WhatsAppConfigModal({ onClose }: Props) {
                   {status === "connected"
                     ? "WhatsApp conectado correctamente."
                     : status === "error"
-                    ? "Configura las credenciales reales en .env.local para generar el QR."
-                    : "El QR aparecerá aquí cuando el proveedor sea Evolution API."}
+                    ? "Hubo un error al generar el código QR. Revisa la consola."
+                    : "El QR aparecerá aquí cuando el proveedor sea WhatsApp Nativo."}
                 </span>
               </>
             )}
@@ -250,17 +250,6 @@ export function WhatsAppConfigModal({ onClose }: Props) {
             {saveMessage && <p className={styles.feedbackMsg}>{saveMessage}</p>}
           </div>
 
-          {/* Webhook */}
-          <div className={styles.webhookSection}>
-            <h3>Webhook (Evolution API)</h3>
-            <p style={{ marginTop: 0, fontSize: "0.85rem" }}>
-              Apunta Evolution API a este servidor para recibir mensajes entrantes.
-            </p>
-            <button onClick={handleSyncWebhook} disabled={syncingWebhook} className={styles.btnSecondary}>
-              {syncingWebhook ? "Sincronizando…" : "🔗 Sincronizar Webhook"}
-            </button>
-            {syncMessage && <p className={styles.feedbackMsg}>{syncMessage}</p>}
-          </div>
         </div>
       </div>
     </div>

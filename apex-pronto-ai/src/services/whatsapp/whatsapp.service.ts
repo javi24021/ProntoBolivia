@@ -1,6 +1,6 @@
 import { log } from "@/lib/utils";
 import { resolveProvider } from "./config.service";
-import * as evolution from "./providers/evolution.provider";
+import * as baileys from "./providers/baileys.provider";
 import * as meta from "./providers/meta.provider";
 import * as n8n from "./providers/n8n.provider";
 import type {
@@ -26,7 +26,7 @@ export class WhatsAppService {
 
     try {
       switch (provider) {
-        case "evolution": return await evolution.sendMessage(input);
+        case "evolution": return await baileys.sendMessage(input); // Redirigimos evolution a baileys para no romper la config
         case "meta":      return await meta.sendMessage(input);
         case "n8n":       return await n8n.sendMessage(input);
         default:          return { success: false, error: "Proveedor no soportado" };
@@ -43,17 +43,18 @@ export class WhatsAppService {
       case "none":      return { status: "connected", message: "Modo simulado activo" };
       case "meta":      return { status: "connected", message: "Meta Cloud API (sin estado)" };
       case "n8n":       return { status: "connected", message: "n8n Webhook configurado" };
-      case "evolution": return evolution.checkHealth();
+      case "evolution": return baileys.checkHealth();
       default:          return { status: "error", message: "Proveedor desconocido" };
     }
   }
 
   async getConnectionQR(): Promise<QRResult> {
-    return evolution.getConnectionQR();
+    return baileys.getConnectionQR();
   }
 
   async configureWebhook(publicBaseUrl: string): Promise<WebhookConfigResult> {
-    return evolution.configureWebhook(publicBaseUrl);
+    // Baileys no necesita configurar webhook externo
+    return { ok: true, message: "Baileys usa eventos internos" };
   }
 }
 
