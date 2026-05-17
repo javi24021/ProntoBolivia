@@ -4,39 +4,47 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
-  padding: 12px 16px;
-  background: $wa-bg;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin: 8px 16px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: all 0.2s ease;
   position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 
   &:hover {
-    background: #202c33; // whatsapp hover state
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
   }
 
   &.selected {
-    background: #2a3942; // whatsapp selected state
+    background: rgba(99, 102, 241, 0.02);
+    border: 2px solid #6366f1; // Indigo border matching Image 2's prominent selected style
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.05);
+    margin: 7px 15px; // Compensate for 2px border to prevent layout shifts
   }
 }
 
 .head {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .avatar {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: #dfe5e7;
-  color: #54656f;
+  background: #6366f1; // Vibrant Indigo background for avatar initials
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 500;
-  font-size: 18px;
+  font-weight: 600;
+  font-size: 15px;
   flex-shrink: 0;
 }
 
@@ -56,9 +64,9 @@
 }
 
 .name {
-  font-size: 16px;
-  font-weight: 400;
-  color: #e9edef;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -68,9 +76,10 @@
 
 .time {
   font-size: 11px;
-  color: #8696a0;
+  color: #64748b;
   margin-left: 8px;
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .subtitle {
@@ -78,13 +87,14 @@
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
-  color: #8696a0;
+  color: #64748b;
 }
 
 .channelLabel {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .rightIndicators {
@@ -94,13 +104,13 @@
 }
 
 .unread {
-  background: #00a884;
-  color: #111b21;
+  background: #ef4444; // Vibrant red notification badge
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: $radius-pill;
   display: flex;
   align-items: center;
@@ -111,7 +121,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-xs;
-  padding-left: 63px; // Align with text
+  padding-left: 54px; // Align with text
 }
 
 .lastMessage {
@@ -119,11 +129,12 @@
   align-items: center;
   gap: $spacing-xs;
   font-size: 13px;
-  color: #8696a0;
+  color: #475569;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-left: 63px; // Align with text
+  padding-left: 54px; // Align with text
+  margin-top: 2px;
 }
 
 .meta {
@@ -131,32 +142,33 @@
   align-items: center;
   justify-content: space-between;
   font-size: 11px;
-  color: #8696a0;
+  color: #64748b;
   margin-top: $spacing-xs;
-  padding-top: $spacing-xs;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
 
   span {
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    font-weight: 500;
   }
 }
 
 .viewingAlert {
-  color: #34b7f1;
-  font-weight: 500;
+  color: #3b82f6;
+  font-weight: 600;
   animation: pulse-slow 2s infinite;
 }
 
 .humanAlert {
-  color: #f59e0b;
-  font-weight: 500;
+  color: #d97706;
+  font-weight: 600;
 }
 
 .botAlert {
-  color: #00a884;
-  font-weight: 500;
+  color: #10b981;
+  font-weight: 600;
   animation: pulse-slow 3s infinite;
 }
 

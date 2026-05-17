@@ -4,30 +4,31 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: $wa-bg; // base dark whatsapp background
+  background: #f8fafc; // LeadFlow Pro light dashboard workspace background
   font-family: $font-sans;
+  color: #0f172a;
 }
 
 .body {
   flex: 1;
   display: grid;
-  // WhatsApp web typical sidebar width
-  grid-template-columns: minmax(320px, 400px) 1fr;
+  grid-template-columns: minmax(340px, 420px) 1fr;
   overflow: hidden;
 }
 
 .leftPane {
   overflow-y: auto;
-  background: $wa-bg;
+  background: #ffffff; // White sidebar matching Image 2
+  border-right: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
   
-  // Custom scrollbar for dark mode
   &::-webkit-scrollbar {
     width: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.16);
+    background-color: rgba(0, 0, 0, 0.08);
+    border-radius: 3px;
   }
 }
 
@@ -35,4 +36,5 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: #f8fafc;
 }

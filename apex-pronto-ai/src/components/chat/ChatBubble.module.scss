@@ -104,3 +104,82 @@
   vertical-align: middle;
   margin-left: 1px;
 }
+
+// ── LeadFlow Pro Dashboard Bubble Overrides ───────────────────
+.dashboardRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dashboardBubble {
+  border-radius: 12px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  padding: 10px 14px 10px 14px !important; // Clean equal spacing
+  max-width: 65% !important;
+
+  &::after {
+    display: none !important; // Strictly NO TAILS!
+  }
+
+  &.user {
+    background: #3b82f6 !important; // Vibrant Blue for customer sent messages (outgoing from bot perspective but customer's)
+    color: #ffffff !important;
+    border-bottom-right-radius: 12px !important;
+    
+    .meta {
+      position: static !important;
+      display: block !important;
+      text-align: right;
+      color: rgba(255, 255, 255, 0.7) !important;
+      margin-top: 4px;
+      font-size: 10px;
+    }
+  }
+
+  &.bot {
+    background: #f1f5f9 !important; // Light gray bubble for agent/bot messages
+    color: #0f172a !important;
+    border-bottom-left-radius: 12px !important;
+
+    .meta {
+      position: static !important;
+      display: block !important;
+      text-align: left;
+      color: #64748b !important;
+      margin-top: 4px;
+      font-size: 10px;
+    }
+  }
+}
+
+.dashboardAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #6366f1;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.dashboardAvatarUser {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #94a3b8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}

@@ -265,6 +265,7 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
                 role={m.role === "user" ? "user" : m.role === "system" ? "system" : "bot"}
                 text={m.text}
                 timestamp={tsToTime(m.createdAt as Timestamp)}
+                isDashboard={true}
               />
             ))
           )}

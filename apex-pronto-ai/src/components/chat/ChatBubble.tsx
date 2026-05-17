@@ -4,15 +4,15 @@ export interface ChatBubbleProps {
   role: "user" | "bot" | "system";
   text: string;
   timestamp?: string;
+  isDashboard?: boolean;
 }
 
 /**
- * Burbuja WhatsApp-style.
- * - user   → burbuja verde (derecha) con cola inferior-derecha
- * - bot    → burbuja blanca (izquierda) con cola inferior-izquierda
- * - system → texto centrado en píldora gris traslúcida
+ * Burbuja adaptable.
+ * - Si es dashboard: diseño minimalista (sin colas, bordes redondeados limpios, azul/gris).
+ * - Si es demo-chat: burbuja WhatsApp-style con colas.
  */
-export function ChatBubble({ role, text, timestamp }: ChatBubbleProps) {
+export function ChatBubble({ role, text, timestamp, isDashboard = false }: ChatBubbleProps) {
   if (role === "system") {
     return (
       <div className={styles.systemRow}>
@@ -21,16 +21,21 @@ export function ChatBubble({ role, text, timestamp }: ChatBubbleProps) {
     );
   }
 
+  const rowClass = `${styles.row} ${styles[role]} ${isDashboard ? styles.dashboardRow : ""}`;
+  const bubbleClass = `${styles.bubble} ${styles[role]} ${isDashboard ? styles.dashboardBubble : ""}`;
+
   return (
-    <div className={`${styles.row} ${styles[role]}`}>
-      <div className={`${styles.bubble} ${styles[role]}`}>
+    <div className={rowClass}>
+      {isDashboard && role === "bot" && (
+        <div className={styles.dashboardAvatar}>🤖</div>
+      )}
+      <div className={bubbleClass}>
         <span className={styles.text}>{text}</span>
         {timestamp && (
           <span className={styles.meta}>
             {timestamp}
-            {role === "user" && (
+            {role === "user" && !isDashboard && (
               <svg className={styles.ticks} viewBox="0 0 18 11" width="18" height="11">
-                {/* Double check mark — WhatsApp style */}
                 <path
                   d="M17.394 0.906L7.918 10.382 4.606 7.07"
                   fill="none"
@@ -52,6 +57,9 @@ export function ChatBubble({ role, text, timestamp }: ChatBubbleProps) {
           </span>
         )}
       </div>
+      {isDashboard && role === "user" && (
+        <div className={styles.dashboardAvatarUser}>👤</div>
+      )}
     </div>
   );
 }
