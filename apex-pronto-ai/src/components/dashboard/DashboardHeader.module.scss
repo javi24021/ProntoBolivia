@@ -1,0 +1,119 @@
+@use "@/styles/variables" as *;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-xl;
+  background: $color-surface;
+  border-bottom: 1px solid $color-border;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  background: $color-brand-gradient;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: $font-size-xl;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-size: $font-size-xl;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.brandTagline {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin: 0;
+}
+
+.nav {
+  display: flex;
+  gap: $spacing-xs;
+  margin-left: $spacing-2xl;
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+
+  &.active {
+    background: $color-brand-soft;
+    color: $color-brand-soft-text;
+    font-weight: 600;
+  }
+
+  &:hover:not(.active) {
+    background: $color-bg-subtle;
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-left: auto;
+}
+
+.iconBtn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-md;
+  background: $color-bg-subtle;
+  border: none;
+  color: $color-text-secondary;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+
+  &:hover {
+    background: $color-border;
+  }
+}
+
+.notifBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: $color-red;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: $radius-pill;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

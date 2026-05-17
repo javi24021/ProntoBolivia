@@ -1,0 +1,59 @@
+@use "@/styles/variables" as *;
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  background: $color-surface;
+  border-bottom: 1px solid $color-border;
+  flex-wrap: wrap;
+}
+
+.search {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+
+  input {
+    width: 100%;
+    padding: $spacing-sm $spacing-md $spacing-sm 36px;
+    border: 1px solid $color-border;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    font-family: inherit;
+    outline: none;
+    background: $color-surface;
+
+    &:focus {
+      border-color: $color-brand;
+    }
+  }
+
+  &::before {
+    content: "🔍";
+    position: absolute;
+    left: $spacing-md;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;
+  }
+}
+
+.select {
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  font-family: inherit;
+  background: $color-surface;
+  color: $color-text-primary;
+  cursor: pointer;
+  outline: none;
+  min-width: 150px;
+
+  &:focus {
+    border-color: $color-brand;
+  }
+}

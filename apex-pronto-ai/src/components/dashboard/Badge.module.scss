@@ -1,0 +1,46 @@
+@use "@/styles/variables" as *;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 2px $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.red {
+  background: $color-red-soft;
+  color: $color-red-soft-text;
+}
+.green {
+  background: $color-green-soft;
+  color: $color-green-soft-text;
+}
+.yellow {
+  background: $color-yellow-soft;
+  color: $color-yellow-soft-text;
+}
+.orange {
+  background: $color-orange-soft;
+  color: $color-orange-soft-text;
+}
+.pink {
+  background: $color-pink-soft;
+  color: $color-pink-soft-text;
+}
+.violet {
+  background: $color-violet-soft;
+  color: $color-violet-soft-text;
+}
+.blue {
+  background: $color-blue-soft;
+  color: #1e40af;
+}
+.gray {
+  background: $color-bg-subtle;
+  color: $color-text-secondary;
+}

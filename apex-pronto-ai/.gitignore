@@ -40,3 +40,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# misc
+.DS_Store
+*.log
+
+# IDE
+.vscode/
+.idea/
+# Firebase Admin SDK key
+firebase-admin-key.json
+*.firebase-adminsdk*.json

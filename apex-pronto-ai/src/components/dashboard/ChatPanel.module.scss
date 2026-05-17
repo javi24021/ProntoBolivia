@@ -1,0 +1,123 @@
+@use "@/styles/variables" as *;
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: $color-surface;
+  border-left: 1px solid $color-border;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-xl;
+  border-bottom: 1px solid $color-border;
+  gap: $spacing-md;
+}
+
+.headLeft {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  min-width: 0;
+  flex: 1;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-pill;
+  background: $color-brand-gradient;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: $font-size-md;
+  flex-shrink: 0;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: $font-size-lg;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.subInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.headRight {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-md;
+  background: $color-bg-subtle;
+  border-radius: $radius-pill;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $color-red;
+
+  &.bot {
+    background: $color-brand;
+  }
+  &.human {
+    background: $color-yellow;
+  }
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  background: $color-bg;
+}
+
+.empty {
+  margin: auto;
+  text-align: center;
+  color: $color-text-muted;
+  font-size: $font-size-md;
+}
+
+.summary {
+  padding: $spacing-md $spacing-xl;
+  border-top: 1px solid $color-border;
+  background: $color-brand-soft;
+  font-size: $font-size-sm;
+  color: $color-brand-soft-text;
+
+  strong {
+    margin-right: $spacing-sm;
+  }
+}

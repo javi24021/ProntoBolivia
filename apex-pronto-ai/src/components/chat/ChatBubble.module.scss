@@ -1,0 +1,60 @@
+@use "@/styles/variables" as *;
+
+.row {
+  display: flex;
+
+  &.user {
+    justify-content: flex-end;
+  }
+
+  &.bot {
+    justify-content: flex-start;
+  }
+
+  &.system {
+    justify-content: center;
+  }
+}
+
+.bubble {
+  max-width: 75%;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-bubble;
+  font-size: $font-size-md;
+  line-height: 1.45;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  box-shadow: $shadow-xs;
+
+  &.user {
+    background: $color-bubble-user-bg;
+    color: $color-bubble-user-text;
+    border-bottom-right-radius: $radius-sm;
+  }
+
+  &.bot {
+    background: $color-bubble-bot-bg;
+    color: $color-bubble-bot-text;
+    border-bottom-left-radius: $radius-sm;
+  }
+
+  &.system {
+    background: transparent;
+    color: $color-text-muted;
+    font-size: $font-size-sm;
+    font-style: italic;
+    box-shadow: none;
+  }
+}
+
+.meta {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: $spacing-xs;
+  text-align: right;
+}
+
+.bot .meta,
+.system .meta {
+  color: $color-text-muted;
+}
