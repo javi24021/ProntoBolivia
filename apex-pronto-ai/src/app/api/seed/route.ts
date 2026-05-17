@@ -106,8 +106,20 @@ const SCENARIOS: SeedScenario[] = [
   },
 ];
 
+let isSeeding = false;
+
 export async function GET() {
-  const results: Array<{
+  if (isSeeding) {
+    return NextResponse.json({
+      ok: false,
+      error: "Ya hay un proceso de sembrado (seed) en ejecución. Espera unos segundos.",
+    }, { status: 409 });
+  }
+
+  isSeeding = true;
+
+  try {
+    const results: Array<{
     name: string;
     phone: string;
     channel: string;
@@ -144,9 +156,17 @@ export async function GET() {
     });
   }
 
-  return NextResponse.json({
-    ok: true,
-    seeded: results.length,
-    results,
-  });
+    return NextResponse.json({
+      ok: true,
+      seeded: results.length,
+      results,
+    });
+  } catch (error: any) {
+    return NextResponse.json({
+      ok: false,
+      error: error.message || "Error desconocido en el sembrado",
+    }, { status: 500 });
+  } finally {
+    isSeeding = false;
+  }
 }
