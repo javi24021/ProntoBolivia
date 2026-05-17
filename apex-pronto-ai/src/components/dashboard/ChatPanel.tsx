@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { collection, onSnapshot, orderBy, query, Timestamp, doc, updateDoc } from "firebase/firestore";
+import { useEffect, useState, useRef } from "react";
+import { collection, onSnapshot, orderBy, query, Timestamp, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase-client";
 import { Badge } from "./Badge";
 import { ChatBubble } from "@/components/chat/ChatBubble";
@@ -38,6 +38,14 @@ function statusLabel(c: Conversation): { text: string; cls: string } {
 export function ChatPanel({ conversation, agentId }: { conversation: Conversation | null; agentId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showBlockModal, setShowBlockModal] = useState(false);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto scroll to bottom when messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     if (!conversation) return;
@@ -143,6 +151,44 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
     });
   };
 
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || !conversation || loading) return;
+
+    setLoading(true);
+    setInput("");
+
+    try {
+      const db = getClientDb();
+      const messagesRef = collection(db, "conversations", conversation.id, "messages");
+      
+      await addDoc(messagesRef, {
+        role: "assistant",
+        text,
+        channel: conversation.channel,
+        createdAt: serverTimestamp(),
+        metadata: {},
+      });
+
+      await updateDoc(doc(db, "conversations", conversation.id), {
+        lastMessage: text,
+        updatedAt: serverTimestamp(),
+        unreadCount: 0,
+      });
+    } catch (error) {
+      console.error("Error sending message from agent:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   if (!conversation) {
     return (
       <div className={styles.panel}>
@@ -222,6 +268,7 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
               />
             ))
           )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
@@ -271,6 +318,10 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
                 className={styles.input}
                 type="text"
                 placeholder="Escribe un mensaje"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={loading}
               />
               <button className={styles.attachBtn} type="button">📷</button>
             </div>
@@ -280,7 +331,14 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
             <button className={styles.blockBtn} onClick={handleBlock} title="Bloquear">
               🚫
             </button>
-            <button className={styles.sendBtn} type="button">🎤</button>
+            <button
+              className={`${styles.sendBtn} ${input.trim() ? styles.active : ""}`}
+              onClick={handleSend}
+              disabled={loading}
+              type="button"
+            >
+              {loading ? "..." : input.trim() ? "➤" : "🎤"}
+            </button>
           </div>
         )}
       </div>
