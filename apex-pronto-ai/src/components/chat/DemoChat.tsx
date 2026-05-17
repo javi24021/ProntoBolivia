@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { collection, query, where, getDocs, orderBy, limit, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit, Timestamp, onSnapshot } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase-client";
 import { ChatBubble } from "./ChatBubble";
 import styles from "./DemoChat.module.scss";
@@ -44,9 +44,15 @@ export function DemoChat() {
   const [phone, setPhone] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [messages, setMessages] = useState<UIMessage[]>([]);
+  const [optimisticMessages, setOptimisticMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const allMessages = [
+    ...messages,
+    ...optimisticMessages.filter((opt) => !messages.some((m) => m.text === opt.text && m.role === "user"))
+  ];
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,18 +75,29 @@ export function DemoChat() {
 
   useEffect(() => {
     if (!phone) return;
-    const loadHistory = async () => {
-      try {
-        const db = getClientDb();
-        const qConv = query(collection(db, "conversations"), where("phone", "==", phone), limit(1));
-        const snapConv = await getDocs(qConv);
-        
-        if (snapConv.empty) return;
-        
-        const convId = snapConv.docs[0].id;
-        const qMsgs = query(collection(db, "conversations", convId, "messages"), orderBy("createdAt", "asc"));
-        const snapMsgs = await getDocs(qMsgs);
-        
+
+    let unsubConv: (() => void) | undefined;
+    let unsubMessages: (() => void) | undefined;
+
+    const db = getClientDb();
+    const qConv = query(collection(db, "conversations"), where("phone", "==", phone), limit(1));
+
+    unsubConv = onSnapshot(qConv, (snapConv) => {
+      // Limpiar oyente de mensajes anterior si cambia
+      if (unsubMessages) {
+        unsubMessages();
+        unsubMessages = undefined;
+      }
+
+      if (snapConv.empty) {
+        setMessages([]);
+        return;
+      }
+
+      const convId = snapConv.docs[0].id;
+      const qMsgs = query(collection(db, "conversations", convId, "messages"), orderBy("createdAt", "asc"));
+
+      unsubMessages = onSnapshot(qMsgs, (snapMsgs) => {
         const history: UIMessage[] = snapMsgs.docs.map((d) => {
           const data = d.data();
           let ts = "";
@@ -95,18 +112,26 @@ export function DemoChat() {
             timestamp: ts || nowHHmm(),
           };
         });
-        
         setMessages(history);
-      } catch (err) {
-        console.error("Error cargando historial de chat:", err);
-      }
+
+        // Limpiar mensajes optimistas que ya fueron confirmados por la base de datos
+        setOptimisticMessages((prev) =>
+          prev.filter((opt) => !history.some((m) => m.text === opt.text && m.role === "user"))
+        );
+      });
+    }, (err) => {
+      console.error("Error en tiempo real de chat:", err);
+    });
+
+    return () => {
+      if (unsubConv) unsubConv();
+      if (unsubMessages) unsubMessages();
     };
-    loadHistory();
   }, [phone]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [allMessages]);
 
   const handleReset = () => {
     const fresh = generateDemoPhone();
@@ -123,15 +148,16 @@ export function DemoChat() {
     const text = input.trim();
     if (!text || loading || !phone) return;
 
-    setError(null);
-
-    const userMsg: UIMessage = {
-      id: `u-${Date.now()}`,
+    // Agregar de forma optimista e instantánea para eliminar cualquier delay visual
+    const optMsg: UIMessage = {
+      id: `opt-${Date.now()}`,
       role: "user",
       text,
       timestamp: nowHHmm(),
     };
-    setMessages((prev) => [...prev, userMsg]);
+    setOptimisticMessages((prev) => [...prev, optMsg]);
+
+    setError(null);
     setInput("");
     setLoading(true);
 
@@ -152,35 +178,13 @@ export function DemoChat() {
         throw new Error(data.error ?? "Error desconocido del servidor");
       }
 
-      if (data.data.reply) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `b-${Date.now()}`,
-            role: "bot",
-            text: data.data!.reply,
-            timestamp: nowHHmm(),
-          },
-        ]);
-      }
-
-      if (data.data.requiresHuman && !data.data.reply) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `s-${Date.now()}`,
-            role: "system",
-            text: "(Tu mensaje fue registrado. Un asesor te responderá pronto.)",
-            timestamp: nowHHmm(),
-          },
-        ]);
-      }
-
       if (!name && text.split(/\s+/).length <= 3 && !text.includes("?")) {
         localStorage.setItem(NAME_KEY, text);
         setName(text);
       }
     } catch (err) {
+      // Si falla, removemos el mensaje optimista para no dejar datos falsos
+      setOptimisticMessages((prev) => prev.filter((m) => m.id !== optMsg.id));
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -242,8 +246,8 @@ export function DemoChat() {
             <span className={styles.systemPill}>🔒 Los mensajes están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos. Haz clic para obtener más información.</span>
           </div>
 
-          {messages.length === 0 ? null : (
-            messages.map((m) => (
+          {allMessages.length === 0 ? null : (
+            allMessages.map((m) => (
               <ChatBubble key={m.id} role={m.role} text={m.text} timestamp={m.timestamp} />
             ))
           )}
