@@ -92,13 +92,7 @@ map.set(d.id, tsDate);
       setConversations(list);
       setUpdatedAtMap(map);
 
-      // Auto-selecciona la primera si no hay nada seleccionado
-      setSelectedId((prev) => {
-        if (!prev && list.length > 0) {
-          return list[0].id;
-        }
-        return prev;
-      });
+
     });
 
     return () => unsub();
@@ -164,7 +158,20 @@ map.set(d.id, tsDate);
     });
 
     return list;
-  }, [conversations, filters, updatedAtMap]);
+  }, [conversations, filters, updatedAtMap, viewMode]);
+
+  // Si el chat seleccionado no está en la lista filtrada actual (por ejemplo, al cambiar de pestaña),
+  // auto-selecciona el primer chat de la nueva lista filtrada.
+  useEffect(() => {
+    if (filtered.length > 0) {
+      const isSelectedInFiltered = filtered.some((c) => c.id === selectedId);
+      if (!isSelectedInFiltered) {
+        setSelectedId(filtered[0].id);
+      }
+    } else {
+      setSelectedId(null);
+    }
+  }, [filtered, selectedId]);
 
   const selected = useMemo(
     () => conversations.find((c) => c.id === selectedId) ?? null,
