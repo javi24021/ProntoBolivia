@@ -21,6 +21,66 @@ import type {
 } from "@/types";
 
 /* ============================================================
+ *  SEGURIDAD (LAYER 0) - HEURÍSTICA DE BLOQUEO
+ * ============================================================ */
+
+/**
+ * Detecta intenciones maliciosas extremas en el texto plano
+ * para bloquear la IA antes de que siquiera piense.
+ */
+function checkMaliciousIntent(text: string): { blocked: boolean; reason?: string } {
+  const normalized = text.toLowerCase();
+  
+  // Palabras de alta peligrosidad (Red Flags)
+  const dangerKeywords = [
+    "matar", "asesinar", "envenenar", "asfixiar", "ciego", "ceguera", 
+    "robar", "arma", "atacar", "herir", "dañar", "violencia", 
+    "mezclar", "quemar", "ácido", "acido", "veneno"
+  ];
+
+  // Si tiene al menos una palabra de peligro, evaluamos patrones de agresión
+  const hasDanger = dangerKeywords.some(word => normalized.includes(word));
+  
+  if (hasDanger) {
+    const maliciousPatterns = [
+      /matar/i,
+      /asfixiar/i,
+      /dañar/i,
+      /tirar.*cara/i,
+      /dejar.*ciego/i,
+      /mezclar.*tirar/i,
+      /envenenar/i,
+      /cómo.*matar/i,
+      /como.*matar/i
+    ];
+
+    if (maliciousPatterns.some(pattern => pattern.test(normalized))) {
+      return { blocked: true, reason: "Patrón de agresión o daño detectado" };
+    }
+  }
+
+  return { blocked: false };
+}
+
+function buildEmergencyResponse(reason: string): AIResponse {
+  return {
+    reply: "No puedo ayudar con ese tipo de consultas. He derivado este chat a un supervisor.",
+    clientType: "desconocido",
+    currentClientType: "desconocido",
+    category: "desconocido",
+    priority: "alta",
+    label: "no_responder",
+    requiresHuman: true,
+    summary: "BLOQUEO DE SEGURIDAD: " + reason,
+    escalationReason: reason,
+    intentScore: 100,
+    shouldAskName: false,
+    shouldAskClientType: false,
+    shouldAskCategory: false,
+  };
+}
+
+/* ============================================================
  *  INPUT / OUTPUT
  * ============================================================ */
 
@@ -195,6 +255,68 @@ export async function processIncomingMessage(
   input: ProcessMessageInput
 ): Promise<ServiceResult<ProcessMessageOutput>> {
   try {
+    /* ------------------------------------------------------------
+     * 0. Seguridad: Capa Heurística (Layer 0)
+     * ---------------------------------------------------------- */
+    const securityCheck = checkMaliciousIntent(input.text);
+    if (securityCheck.blocked) {
+      log("warn", "messageProcessor", "BLOQUEO DE SEGURIDAD ACTIVADO", { 
+        phone: input.phone, 
+        reason: securityCheck.reason 
+      });
+      
+      const emergencyAI = buildEmergencyResponse(securityCheck.reason!);
+      
+      // Creamos la conversación/customer solo para que quede registro del bloqueo
+      const customerResult = await findOrCreateCustomer(input.phone, input.name);
+      if (customerResult.ok) {
+        const customer = customerResult.data;
+        const convResult = await findOrCreateConversation({
+          phone: input.phone,
+          channel: input.channel,
+          customerId: customer.id,
+          customerName: customer.name,
+        });
+        
+        if (convResult.ok) {
+          const conversation = convResult.data;
+          await addMessage(conversation.id, {
+            role: "user",
+            text: input.text,
+            channel: input.channel,
+          });
+          
+          await addMessage(conversation.id, {
+            role: "assistant",
+            text: emergencyAI.reply,
+            channel: input.channel,
+          });
+
+          await updateConversation(conversation.id, {
+            status: "requires_human",
+            label: "no_responder",
+            priority: "alta",
+            summary: emergencyAI.summary,
+            requiresHuman: true,
+            escalationReason: emergencyAI.escalationReason,
+          });
+
+          return {
+            ok: true,
+            data: {
+              conversationId: conversation.id,
+              customerId: customer.id,
+              reply: emergencyAI.reply,
+              requiresHuman: true,
+              status: "requires_human",
+              catalogUrl: null,
+              aiResponse: emergencyAI,
+            },
+          };
+        }
+      }
+    }
+
     /* ------------------------------------------------------------
      * 1. Customer: encontrar o crear
      * ---------------------------------------------------------- */

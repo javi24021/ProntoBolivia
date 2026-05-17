@@ -111,7 +111,10 @@ export async function initBaileys() {
       if (!msg.message || msg.key.fromMe) continue;
 
       const remoteJid = msg.key.remoteJid;
-      if (!remoteJid || remoteJid === "status@broadcast") continue;
+      // 🛡️ REGLA DE NEGOCIO: Ignorar grupos (@g.us) y estados (@broadcast)
+      if (!remoteJid || remoteJid.endsWith("@g.us") || remoteJid === "status@broadcast") {
+        continue;
+      }
 
       const text = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
       if (!text) continue;
