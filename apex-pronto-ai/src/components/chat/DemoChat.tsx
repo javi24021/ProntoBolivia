@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ChatBubble } from "./ChatBubble";
 import styles from "./DemoChat.module.scss";
-
+import { collection, onSnapshot, orderBy, query, where, Timestamp } from "firebase/firestore";
+import { getClientDb } from "@/lib/firebase-client";
 interface UIMessage {
   id: string;
   role: "user" | "bot" | "system";
@@ -63,6 +64,64 @@ export function DemoChat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+  // Listener tiempo real: si el HUMANO responde desde el dashboard,
+  // verlo automáticamente en el chat del cliente.
+  // Buscamos la conversación activa del phone actual.
+  useEffect(() => {
+    if (!phone) return;
+
+    const db = getClientDb();
+    const q = query(
+      collection(db, "conversations"),
+      where("phone", "==", phone),
+      orderBy("updatedAt", "desc")
+    );
+
+    const unsubConv = onSnapshot(q, (snap) => {
+      if (snap.empty) return;
+      const conv = snap.docs[0];
+      const convId = conv.id;
+
+      // Sub-listener: mensajes de esta conversación
+      const msgsQuery = query(
+        collection(db, "conversations", convId, "messages"),
+        orderBy("createdAt", "asc")
+      );
+
+      const unsubMsgs = onSnapshot(msgsQuery, (msgSnap) => {
+        const remoteMessages: UIMessage[] = [];
+        msgSnap.docs.forEach((d) => {
+          const data = d.data();
+          if (data.role !== "human") return; // solo nos interesan los del humano
+          const ts = data.createdAt as Timestamp | null;
+          const tsStr =
+            ts && typeof ts.toDate === "function"
+              ? `${String(ts.toDate().getHours()).padStart(2, "0")}:${String(
+                  ts.toDate().getMinutes()
+                ).padStart(2, "0")}`
+              : nowHHmm();
+          remoteMessages.push({
+            id: `h-${d.id}`,
+            role: "bot", // visualmente lo mostramos como "bot" pero es humano
+            text: `👨‍💼 ${data.text as string}`,
+            timestamp: tsStr,
+          });
+        });
+
+        // Mergeamos con los mensajes locales, sin duplicar IDs
+        setMessages((prev) => {
+          const localIds = new Set(prev.map((m) => m.id));
+          const newRemotes = remoteMessages.filter((m) => !localIds.has(m.id));
+          if (newRemotes.length === 0) return prev;
+          return [...prev, ...newRemotes];
+        });
+      });
+
+      return () => unsubMsgs();
+    });
+
+    return () => unsubConv();
+  }, [phone]);
 
   const handleReset = () => {
     const fresh = generateDemoPhone();

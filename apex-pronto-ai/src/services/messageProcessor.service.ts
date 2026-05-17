@@ -1,4 +1,4 @@
-import {
+﻿import {
   findOrCreateCustomer,
   updateCustomer,
 } from "@/services/customer.service";
@@ -29,19 +29,18 @@ export interface ProcessMessageInput {
   phone: string;
   channel: Channel;
   text: string;
-  /** Nombre proveído por el caller (opcional). Si el caller lo conoce, mejor */
+  /** Nombre proveÃ­do por el caller (opcional). Si el caller lo conoce, mejor */
   name?: string | null;
 }
 
 export interface ProcessMessageOutput {
   conversationId: string;
   customerId: string;
+  customerName: string | null;
   reply: string;
   requiresHuman: boolean;
   status: Conversation["status"];
-  /** Si se envió catálogo, su URL (para que el canal lo adjunte) */
   catalogUrl: string | null;
-  /** AIResponse cruda, útil para debug */
   aiResponse: AIResponse;
 }
 
@@ -61,7 +60,7 @@ function priorityFromIntent(score: number, blocked: boolean): Priority {
 
 /**
  * Decide si hay que repreguntar el tipo de cliente, basado en
- * la última vez que se preguntó en ESTA conversación.
+ * la Ãºltima vez que se preguntÃ³ en ESTA conversaciÃ³n.
  */
 function shouldRepromptClientType(conv: Conversation): boolean {
   if (conv.currentClientType !== "desconocido") return false;
@@ -73,7 +72,7 @@ function shouldRepromptClientType(conv: Conversation): boolean {
 }
 
 /**
- * Detecta heurísticamente si el texto contiene un nombre cuando estamos
+ * Detecta heurÃ­sticamente si el texto contiene un nombre cuando estamos
  * en modo "esperando nombre". Es una regla simple: si el mensaje es corto
  * (1-4 palabras) y no es una pregunta, asumimos que es el nombre.
  *
@@ -81,25 +80,25 @@ function shouldRepromptClientType(conv: Conversation): boolean {
  */
 /**
  * Extrae el nombre del cliente de un mensaje, manejando los patrones
- * comunes en español: "Mi nombre es X", "Soy X", "Me llamo X", o solo "X".
+ * comunes en espaÃ±ol: "Mi nombre es X", "Soy X", "Me llamo X", o solo "X".
  *
- * Devuelve null si no detecta un nombre válido.
+ * Devuelve null si no detecta un nombre vÃ¡lido.
  */
 /**
  * Extrae el nombre del cliente de un mensaje, manejando los patrones
- * comunes en español: "Mi nombre es X", "Soy X", "Me llamo X", o solo "X".
+ * comunes en espaÃ±ol: "Mi nombre es X", "Soy X", "Me llamo X", o solo "X".
  *
  * Tolerante a typos comunes ("npmbre", "nonbre", etc).
- * Devuelve null si no detecta un nombre válido.
+ * Devuelve null si no detecta un nombre vÃ¡lido.
  */
 function extractNameFromMessage(text: string): string | null {
   const cleaned = text.trim();
   if (!cleaned) return null;
-  if (cleaned.includes("?") || cleaned.includes("¿")) return null;
+  if (cleaned.includes("?") || cleaned.includes("Â¿")) return null;
   if (cleaned.length > 80) return null;
 
   // Patrones con tolerancia a typos: "mi <palabra-similar-a-nombre> es X"
-  // Aceptamos cualquier palabra de 5-7 letras donde "es X" o "es: X" venga después.
+  // Aceptamos cualquier palabra de 5-7 letras donde "es X" o "es: X" venga despuÃ©s.
   const lowered = cleaned.toLowerCase();
 
   // Variantes con "mi nombre/npmbre/nonbre/nomvre es X"
@@ -132,7 +131,7 @@ function extractNameFromMessage(text: string): string | null {
   // Fallback: si el mensaje es muy corto (1-3 palabras de puras letras), es el nombre directo
   const words = cleaned.split(/\s+/);
   if (words.length >= 1 && words.length <= 3) {
-    const allLetters = words.every((w) => /^[a-záéíóúñ]+$/i.test(w));
+    const allLetters = words.every((w) => /^[a-zÃ¡Ã©Ã­Ã³ÃºÃ±]+$/i.test(w));
     if (allLetters && isValidNameCandidate(cleaned)) {
       return capitalizeName(cleaned);
     }
@@ -146,7 +145,7 @@ function isValidNameCandidate(candidate: string): boolean {
   const trimmed = candidate.trim();
   if (trimmed.length < 2 || trimmed.length > 50) return false;
   // Solo letras y espacios
-  if (!/^[a-záéíóúñ\s]+$/i.test(trimmed)) return false;
+  if (!/^[a-zÃ¡Ã©Ã­Ã³ÃºÃ±\s]+$/i.test(trimmed)) return false;
   // Rechazar palabras comunes que no son nombres
   const blacklist = [
     "hola",
@@ -164,9 +163,9 @@ function isValidNameCandidate(candidate: string): boolean {
     "limpieza",
     "belleza",
     "cosmeticos",
-    "cosméticos",
+    "cosmÃ©ticos",
     "bebe",
-    "bebé",
+    "bebÃ©",
   ];
   const lower = trimmed.toLowerCase();
   if (blacklist.includes(lower)) return false;
@@ -188,9 +187,9 @@ function capitalizeName(raw: string): string {
 /**
  * Procesa un mensaje entrante de cualquier canal.
  *
- * Es el ÚNICO punto de entrada para mensajes en el sistema.
- * /api/chat-demo y /api/inbound-message deben usar esta función,
- * sin duplicar lógica.
+ * Es el ÃšNICO punto de entrada para mensajes en el sistema.
+ * /api/chat-demo y /api/inbound-message deben usar esta funciÃ³n,
+ * sin duplicar lÃ³gica.
  */
 export async function processIncomingMessage(
   input: ProcessMessageInput
@@ -203,13 +202,14 @@ export async function processIncomingMessage(
     if (!customerResult.ok) return customerResult;
     let customer = customerResult.data;
 
-    // Si está bloqueado, no procesamos nada más
+    // Si estÃ¡ bloqueado, no procesamos nada mÃ¡s
     if (customer.blocked) {
       return {
         ok: true,
         data: {
           conversationId: "",
           customerId: customer.id,
+          customerName: customer.name,
           reply: "",
           requiresHuman: false,
           status: "blocked",
@@ -231,7 +231,7 @@ export async function processIncomingMessage(
     if (!convResult.ok) return convResult;
     let conversation = convResult.data;
 
-    // Si la conversación se creó sin customerId/Name (por alguna razón), corregir
+    // Si la conversaciÃ³n se creÃ³ sin customerId/Name (por alguna razÃ³n), corregir
     if (!conversation.customerId || conversation.customerName !== customer.name) {
       await updateConversation(conversation.id, {
         customerId: customer.id,
@@ -245,7 +245,7 @@ export async function processIncomingMessage(
     }
 
     /* ------------------------------------------------------------
-     * 3. Si estábamos esperando nombre y este mensaje parece serlo,
+     * 3. Si estÃ¡bamos esperando nombre y este mensaje parece serlo,
      *    capturarlo ANTES de mandarlo a la IA.
      * ---------------------------------------------------------- */
     if (!customer.name && conversation.lastAskedNameAt) {
@@ -273,11 +273,19 @@ export async function processIncomingMessage(
     if (!userMsgResult.ok) return userMsgResult;
 
     /* ------------------------------------------------------------
-     * 5. ¿La conversación YA está en requires_human?
-     *    Si sí, no volver a llamar a la IA con el mensaje completo.
+     * 5. Â¿La conversaciÃ³n YA estÃ¡ en requires_human?
+     *    Si sÃ­, no volver a llamar a la IA con el mensaje completo.
      *    Solo actualizar unreadCount, summary y NO responder.
      * ---------------------------------------------------------- */
-    if (conversation.status === "requires_human" || conversation.status === "human_handling") {
+    /* ------------------------------------------------------------
+     * 5. Si la conversaciÃ³n ya estÃ¡ atendida por humano,
+     *    NO llamar al bot. Solo guardar mensaje + sumar unreadCount.
+     * ---------------------------------------------------------- */
+    if (
+      conversation.status === "requires_human" ||
+      conversation.status === "human_handling" ||
+      conversation.status === "human_notified"
+    ) {
       await updateConversation(conversation.id, {
         unreadCount: conversation.unreadCount + 1,
         summary: truncate(
@@ -290,7 +298,8 @@ export async function processIncomingMessage(
         data: {
           conversationId: conversation.id,
           customerId: customer.id,
-          reply: "", // no respondemos nada nuevo
+          customerName: customer.name,
+          reply: "", // no respondemos nada â€” humano debe atender
           requiresHuman: true,
           status: conversation.status,
           catalogUrl: null,
@@ -305,7 +314,7 @@ export async function processIncomingMessage(
     const recentMessages = await getRecentMessages(conversation.id, 10);
     const history = recentMessages
       .filter((m) => m.role === "user" || m.role === "assistant" || m.role === "human")
-      .slice(0, -1) // excluir el mensaje recién agregado
+      .slice(0, -1) // excluir el mensaje reciÃ©n agregado
       .map((m) => ({
         role: m.role as "user" | "assistant" | "human",
         text: m.text,
@@ -329,7 +338,7 @@ export async function processIncomingMessage(
      * 8. Aplicar reglas sobre la respuesta de la IA
      * ---------------------------------------------------------- */
 
-    // Catálogo: validar contra fuente de verdad
+    // CatÃ¡logo: validar contra fuente de verdad
     let catalogUrl: string | null = null;
     let finalReply = ai.reply;
 
@@ -337,21 +346,21 @@ export async function processIncomingMessage(
       const catalog = findCatalogById(ai.catalogId);
       if (catalog) {
         catalogUrl = catalog.url;
-        // Anexar URL del catálogo al reply, si no está ya
+        // Anexar URL del catÃ¡logo al reply, si no estÃ¡ ya
         if (!finalReply.includes(catalog.url)) {
-          finalReply = `${finalReply}\n\n📎 Catálogo: ${catalog.url}`;
+          finalReply = `${finalReply}\n\nðŸ“Ž CatÃ¡logo: ${catalog.url}`;
         }
       } else {
-        // La IA inventó un catalogId que no existe → escalar a humano
-        log("warn", "messageProcessor", "IA refirió catalogId inexistente", {
+        // La IA inventÃ³ un catalogId que no existe â†’ escalar a humano
+        log("warn", "messageProcessor", "IA refiriÃ³ catalogId inexistente", {
           catalogId: ai.catalogId,
         });
         ai.requiresHuman = true;
         ai.escalationReason =
           (ai.escalationReason ?? "") +
-          " (Catálogo solicitado no existe en sistema)";
+          " (CatÃ¡logo solicitado no existe en sistema)";
         finalReply =
-          "Ya registré tu consulta y la derivaré con un asesor para que pueda ayudarte con información específica.";
+          "Ya registrÃ© tu consulta y la derivarÃ© con un asesor para que pueda ayudarte con informaciÃ³n especÃ­fica.";
       }
     }
 
@@ -374,7 +383,7 @@ export async function processIncomingMessage(
     });
 
     /* ------------------------------------------------------------
-     * 10. Actualizar customer si la IA detectó datos nuevos
+     * 10. Actualizar customer si la IA detectÃ³ datos nuevos
      * ---------------------------------------------------------- */
     const customerPatch: Parameters<typeof updateCustomer>[1] = {};
     if (ai.currentClientType !== "desconocido") {
@@ -398,7 +407,7 @@ export async function processIncomingMessage(
     }
 
     /* ------------------------------------------------------------
-     * 11. Actualizar conversación
+     * 11. Actualizar conversaciÃ³n
      * ---------------------------------------------------------- */
     const priority = priorityFromIntent(ai.intentScore, customer.blocked);
     const newStatus: Conversation["status"] = ai.requiresHuman
@@ -409,7 +418,7 @@ export async function processIncomingMessage(
       currentClientType: ai.currentClientType,
       category: ai.category,
       priority,
-      // Si la IA escala a humano pero no asignó label, forzamos "importante"
+      // Si la IA escala a humano pero no asignÃ³ label, forzamos "importante"
 label: ai.requiresHuman && !ai.label ? "importante" : ai.label,
       status: newStatus,
       summary: truncate(ai.summary, 400),
@@ -439,6 +448,7 @@ label: ai.requiresHuman && !ai.label ? "importante" : ai.label,
       data: {
         conversationId: conversation.id,
         customerId: customer.id,
+        customerName: customer.name,
         reply: finalReply,
         requiresHuman: ai.requiresHuman,
         status: newStatus,
@@ -486,7 +496,7 @@ function buildSilentAIResponse(
     priority: "alta",
     label: "importante",
     requiresHuman: true,
-    summary: `Conversación ya en estado ${status}, cliente sigue escribiendo`,
+    summary: `ConversaciÃ³n ya en estado ${status}, cliente sigue escribiendo`,
     intentScore: 50,
     shouldAskName: false,
     shouldAskClientType: false,

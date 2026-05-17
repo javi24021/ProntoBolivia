@@ -7,6 +7,7 @@ import { Badge } from "./Badge";
 import { ChatBubble } from "@/components/chat/ChatBubble";
 import styles from "./ChatPanel.module.scss";
 import type { Conversation, Message } from "@/types";
+import { ChatComposer } from "./ChatComposer";
 
 function initials(name: string | null, phone: string): string {
   if (name) {
@@ -124,6 +125,8 @@ export function ChatPanel({ conversation }: { conversation: Conversation | null 
           ))
         )}
       </div>
+      <ChatComposer conversation={conversation} />
+
 
       {conversation.summary && (
         <div className={styles.summary}>
