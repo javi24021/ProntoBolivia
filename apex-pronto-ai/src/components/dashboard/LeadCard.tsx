@@ -83,11 +83,13 @@ export function LeadCard({
   selected,
   onClick,
   updatedAtDate,
+  isViewedByOther,
 }: {
   conversation: Conversation;
   selected: boolean;
   onClick: () => void;
   updatedAtDate: Date | null;
+  isViewedByOther: boolean;
 }) {
   const labelBadge = labelToBadge(conversation.label);
   const categoryBadge = categoryToBadge(conversation.category);
@@ -98,20 +100,25 @@ export function LeadCard({
       className={`${styles.card} ${selected ? styles.selected : ""}`}
       onClick={onClick}
     >
-      {conversation.unreadCount > 0 && (
-        <div className={styles.unread}>{conversation.unreadCount}</div>
-      )}
-
       <div className={styles.head}>
         <div className={styles.avatar}>
           {initials(conversation.customerName, conversation.phone)}
         </div>
         <div className={styles.nameWrap}>
-          <p className={styles.name}>
-            {conversation.customerName ?? conversation.phone}
-          </p>
+          <div className={styles.nameRow}>
+            <p className={styles.name}>
+              {conversation.customerName ?? conversation.phone}
+            </p>
+            <span className={styles.time}>{relativeTime(updatedAtDate)}</span>
+          </div>
           <div className={styles.subtitle}>
-            <span>{channelIcon(conversation.channel)}</span>
+            <span className={styles.channelLabel}>{channelIcon(conversation.channel)}</span>
+            <div className={styles.rightIndicators}>
+              {isViewedByOther && <span className={styles.viewingAlert} title="Otro vendedor está viendo este chat">👀 Viendo</span>}
+              {conversation.unreadCount > 0 && (
+                <div className={styles.unread}>{conversation.unreadCount}</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -131,8 +138,11 @@ export function LeadCard({
       <div className={styles.lastMessage}>💬 {conversation.lastMessage || "Sin mensajes"}</div>
 
       <div className={styles.meta}>
-        <span>🕐 {relativeTime(updatedAtDate)}</span>
-        {conversation.requiresHuman && <span>⚠️ Requiere humano</span>}
+        {conversation.requiresHuman ? (
+          <span className={styles.humanAlert}>⚠️ Requiere humano</span>
+        ) : conversation.status === "bot_handling" ? (
+          <span className={styles.botAlert}>🤖 IA atendiendo</span>
+        ) : null}
       </div>
     </div>
   );

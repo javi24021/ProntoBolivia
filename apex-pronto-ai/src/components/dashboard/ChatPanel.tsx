@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, orderBy, query, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, Timestamp, doc, updateDoc } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase-client";
 import { Badge } from "./Badge";
 import { ChatBubble } from "@/components/chat/ChatBubble";
+import { ConfirmModal } from "./ConfirmModal";
 import styles from "./ChatPanel.module.scss";
 import type { Conversation, Message } from "@/types";
+import Image from "next/image";
 
 function initials(name: string | null, phone: string): string {
   if (name) {
@@ -33,8 +35,9 @@ function statusLabel(c: Conversation): { text: string; cls: string } {
   return { text: "Bot atendiendo", cls: "bot" };
 }
 
-export function ChatPanel({ conversation }: { conversation: Conversation | null }) {
+export function ChatPanel({ conversation, agentId }: { conversation: Conversation | null; agentId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showBlockModal, setShowBlockModal] = useState(false);
 
   useEffect(() => {
     if (!conversation) {
@@ -66,11 +69,92 @@ export function ChatPanel({ conversation }: { conversation: Conversation | null 
     return () => unsub();
   }, [conversation]);
 
+  // Separate presence effect: write to activeSessions/{agentId}, NOT to conversations
+  // This prevents onSnapshot on conversations from being triggered by presence changes
+  useEffect(() => {
+    if (!agentId) return;
+
+    const db = getClientDb();
+    const sessionRef = doc(db, "activeSessions", agentId);
+
+    if (conversation?.id) {
+      // Register that this agent is viewing this conversation
+      updateDoc(sessionRef, { conversationId: conversation.id, updatedAt: new Date() })
+        .catch(() => {
+          // Document may not exist yet, use setDoc
+          import("firebase/firestore").then(({ setDoc }) => {
+            setDoc(sessionRef, { conversationId: conversation.id, agentId, updatedAt: new Date() });
+          });
+        });
+    } else {
+      updateDoc(sessionRef, { conversationId: null })
+        .catch(() => { /* ignore if doc doesn't exist */ });
+    }
+
+    return () => {
+      updateDoc(sessionRef, { conversationId: null }).catch(() => {});
+    };
+  }, [conversation?.id, agentId]);
+
+  // Separate effect for clearing unreadCount — only when the selected chat changes
+  useEffect(() => {
+    if (!conversation?.id || !conversation.unreadCount) return;
+    const db = getClientDb();
+    updateDoc(doc(db, "conversations", conversation.id), { unreadCount: 0 }).catch(console.error);
+    // We intentionally only run this when the conversation id changes (opening a chat)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation?.id]);
+
+  const handleToggleControl = async () => {
+    if (!conversation) return;
+    const db = getClientDb();
+    const isHuman = conversation.status === "human_handling";
+    await updateDoc(doc(db, "conversations", conversation.id), {
+      status: isHuman ? "bot_handling" : "human_handling",
+      requiresHuman: false,
+    });
+  };
+
+  const handleComplete = async () => {
+    if (!conversation) return;
+    const db = getClientDb();
+    await updateDoc(doc(db, "conversations", conversation.id), {
+      status: "completed",
+    });
+  };
+
+  const handleBlock = async () => {
+    setShowBlockModal(true);
+  };
+
+  const confirmBlock = async () => {
+    setShowBlockModal(false);
+    if (!conversation) return;
+    const db = getClientDb();
+    await updateDoc(doc(db, "conversations", conversation.id), {
+      status: "blocked",
+      requiresHuman: false,
+    });
+  };
+
+  const handleUnblock = async () => {
+    if (!conversation) return;
+    const db = getClientDb();
+    await updateDoc(doc(db, "conversations", conversation.id), {
+      status: "bot_handling",
+      requiresHuman: false,
+    });
+  };
+
   if (!conversation) {
     return (
       <div className={styles.panel}>
-        <div className={styles.empty} style={{ margin: "auto" }}>
-          Selecciona un cliente para ver la conversación
+        <div className={styles.emptyWrap}>
+           {/* WhatsApp Web style empty state */}
+           <Image src="/ProntoLogo.jpeg" alt="Pronto Bolivia" width={120} height={120} style={{ borderRadius: '50%', marginBottom: '32px', opacity: 0.8 }} />
+           <h2>Pronto Bolivia CRM</h2>
+           <p>Selecciona un chat de la lista para ver la conversación o enviar un mensaje.</p>
+           <p className={styles.encryptionInfo}>🔒 Cifrado de extremo a extremo y protegido por IA.</p>
         </div>
       </div>
     );
@@ -80,6 +164,17 @@ export function ChatPanel({ conversation }: { conversation: Conversation | null 
 
   return (
     <div className={styles.panel}>
+      {showBlockModal && (
+        <ConfirmModal
+          title="Bloquear conversación"
+          message={`¿Deseas bloquear el chat de ${conversation.customerName ?? conversation.phone}? La IA informará al cliente de la suspensión del servicio y no responderá más mensajes.`}
+          confirmLabel="Sí, bloquear"
+          cancelLabel="Cancelar"
+          danger
+          onConfirm={confirmBlock}
+          onCancel={() => setShowBlockModal(false)}
+        />
+      )}
       <div className={styles.head}>
         <div className={styles.headLeft}>
           <div className={styles.avatar}>
@@ -107,22 +202,30 @@ export function ChatPanel({ conversation }: { conversation: Conversation | null 
             <span className={`${styles.statusDot} ${styles[status.cls]}`} />
             {status.text}
           </div>
+          <button className={styles.iconBtn} title="Buscar">🔍</button>
+          <button className={styles.iconBtn} title="Menú">⋮</button>
         </div>
       </div>
 
-      <div className={styles.messages}>
-        {messages.length === 0 ? (
-          <div className={styles.empty}>Cargando mensajes...</div>
-        ) : (
-          messages.map((m) => (
-            <ChatBubble
-              key={m.id}
-              role={m.role === "user" ? "user" : m.role === "system" ? "system" : "bot"}
-              text={m.text}
-              timestamp={tsToTime(m.createdAt as Timestamp)}
-            />
-          ))
-        )}
+      <div className={styles.messagesBg}>
+        <div className={styles.messagesOverlay}></div>
+        <div className={styles.messages}>
+          <div className={styles.systemRow}>
+            <span className={styles.systemPill}>🔒 Los mensajes están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.</span>
+          </div>
+          {messages.length === 0 ? (
+            <div className={styles.empty}>Cargando mensajes...</div>
+          ) : (
+            messages.map((m) => (
+              <ChatBubble
+                key={m.id}
+                role={m.role === "user" ? "user" : m.role === "system" ? "system" : "bot"}
+                text={m.text}
+                timestamp={tsToTime(m.createdAt as Timestamp)}
+              />
+            ))
+          )}
+        </div>
       </div>
 
       {conversation.summary && (
@@ -131,6 +234,59 @@ export function ChatPanel({ conversation }: { conversation: Conversation | null 
           {conversation.summary}
         </div>
       )}
+      
+      {/* Footer / Composer Area */}
+      <div className={styles.composerWrapper}>
+        {conversation.status === "blocked" ? (
+          <div className={styles.blockedBar}>
+            <span>🚫 Este chat está bloqueado. La IA no responderá al cliente.</span>
+            <button className={styles.unblockBtn} onClick={handleUnblock}>
+              Desbloquear
+            </button>
+          </div>
+        ) : conversation.status === "bot_handling" ? (
+          <div className={styles.botControlBar}>
+            <span>🤖 La IA está respondiendo a este cliente.</span>
+            <div className={styles.botActions}>
+              <button className={styles.controlBtn} onClick={handleToggleControl}>
+                Tomar el control
+              </button>
+              <button className={styles.completeBtn} onClick={handleComplete} title="Marcar como completado">
+                ✓ Completar
+              </button>
+              <button className={styles.blockBtn} onClick={handleBlock} title="Bloquear chat">
+                🚫
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.humanControlBar}>
+            <button 
+              className={styles.controlBtnSecondary} 
+              onClick={handleToggleControl} 
+              title="Devolver control a la IA"
+            >
+              🤖
+            </button>
+            <div className={styles.composer}>
+              <button className={styles.attachBtn} type="button">📎</button>
+              <input
+                className={styles.input}
+                type="text"
+                placeholder="Escribe un mensaje"
+              />
+              <button className={styles.attachBtn} type="button">📷</button>
+            </div>
+            <button className={styles.completeBtn} onClick={handleComplete} title="Completar">
+              ✓
+            </button>
+            <button className={styles.blockBtn} onClick={handleBlock} title="Bloquear">
+              🚫
+            </button>
+            <button className={styles.sendBtn} type="button">🎤</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

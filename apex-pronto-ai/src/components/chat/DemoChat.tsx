@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { collection, query, where, getDocs, orderBy, limit, Timestamp } from "firebase/firestore";
+import { getClientDb } from "@/lib/firebase-client";
 import { ChatBubble } from "./ChatBubble";
 import styles from "./DemoChat.module.scss";
 
@@ -50,14 +53,52 @@ export function DemoChat() {
 
   useEffect(() => {
     const stored = localStorage.getItem(PHONE_KEY);
+    let currentPhone = stored;
     if (stored) {
       setPhone(stored);
     } else {
       const fresh = generateDemoPhone();
       localStorage.setItem(PHONE_KEY, fresh);
       setPhone(fresh);
+      currentPhone = fresh;
     }
     setName(localStorage.getItem(NAME_KEY) ?? "");
+
+    if (currentPhone) {
+      const loadHistory = async () => {
+        try {
+          const db = getClientDb();
+          const qConv = query(collection(db, "conversations"), where("phone", "==", currentPhone), limit(1));
+          const snapConv = await getDocs(qConv);
+          
+          if (snapConv.empty) return;
+          
+          const convId = snapConv.docs[0].id;
+          const qMsgs = query(collection(db, "conversations", convId, "messages"), orderBy("createdAt", "asc"));
+          const snapMsgs = await getDocs(qMsgs);
+          
+          const history: UIMessage[] = snapMsgs.docs.map((d) => {
+            const data = d.data();
+            let ts = "";
+            if (data.createdAt && typeof data.createdAt.toDate === "function") {
+              const date = (data.createdAt as Timestamp).toDate();
+              ts = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+            }
+            return {
+              id: d.id,
+              role: data.role === "user" ? "user" : data.role === "system" ? "system" : "bot",
+              text: data.text,
+              timestamp: ts || nowHHmm(),
+            };
+          });
+          
+          setMessages(history);
+        } catch (err) {
+          console.error("Error cargando historial de chat:", err);
+        }
+      };
+      loadHistory();
+    }
   }, []);
 
   useEffect(() => {
@@ -155,56 +196,82 @@ export function DemoChat() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.title}>Bolivia Soon</h1>
-          <p className={styles.subtitle}>Asistente virtual</p>
+          <div className={styles.avatar}>
+            <Image 
+              src="/ProntoLogo.jpeg" 
+              alt="Pronto Bolivia" 
+              width={40} 
+              height={40} 
+              style={{ borderRadius: '50%', objectFit: 'cover' }} 
+            />
+          </div>
+          <div className={styles.titleWrap}>
+            <h1 className={styles.title}>Pronto Bolivia</h1>
+            <p className={styles.subtitle}>En línea</p>
+          </div>
         </div>
         <div className={styles.headerRight}>
-          <button className={styles.resetBtn} onClick={handleReset} type="button">
-            Nuevo cliente
+          <button className={styles.iconBtn} type="button" title="Llamada (Demo)">
+            📞
+          </button>
+          <button className={styles.iconBtn} type="button" title="Videollamada (Demo)">
+            🎥
+          </button>
+          <button className={styles.resetBtn} onClick={handleReset} type="button" title="Nuevo cliente">
+            🔄
           </button>
         </div>
       </header>
 
-      <div className={styles.identityRow}>
-        <span>📱 {phone || "..."}</span>
-        {name && <span>👤 {name}</span>}
+      {/* Identity row - WhatsApp style floating info pill */}
+      <div className={styles.identityWrapper}>
+        <div className={styles.identityPill}>
+          <span>📱 {phone || "..."}</span>
+          {name && <span>👤 {name}</span>}
+        </div>
       </div>
 
-      <div className={styles.messages}>
-        {messages.length === 0 ? (
-          <div className={styles.emptyState}>
-            Escribe un mensaje para iniciar la conversación.
-            <br />
-            El bot te saludará y te ayudará a encontrar el catálogo correcto.
+      <div className={styles.messagesBg}>
+        {/* Usamos el fondo de WhatsApp proporcionado */}
+        <div className={styles.messagesOverlay}></div>
+        <div className={styles.messages}>
+          <div className={styles.systemRow}>
+            <span className={styles.systemPill}>🔒 Los mensajes están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos. Haz clic para obtener más información.</span>
           </div>
-        ) : (
-          messages.map((m) => (
-            <ChatBubble key={m.id} role={m.role} text={m.text} timestamp={m.timestamp} />
-          ))
-        )}
-        <div ref={messagesEndRef} />
+
+          {messages.length === 0 ? null : (
+            messages.map((m) => (
+              <ChatBubble key={m.id} role={m.role} text={m.text} timestamp={m.timestamp} />
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {error && <div className={styles.errorBanner}>⚠️ {error}</div>}
 
-      <div className={styles.composer}>
-        <input
-          ref={inputRef}
-          className={styles.input}
-          type="text"
-          placeholder="Escribe un mensaje..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={loading}
-        />
+      <div className={styles.composerWrapper}>
+        <div className={styles.composer}>
+          <button className={styles.attachBtn} type="button">📎</button>
+          <input
+            ref={inputRef}
+            className={styles.input}
+            type="text"
+            placeholder="Escribe un mensaje"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={loading}
+          />
+          <button className={styles.attachBtn} type="button">📷</button>
+        </div>
         <button
-          className={styles.sendBtn}
+          className={`${styles.sendBtn} ${input.trim() ? styles.active : ''}`}
           onClick={handleSend}
           disabled={loading || !input.trim()}
           type="button"
         >
-          {loading ? "..." : "Enviar"}
+          {loading ? "..." : (input.trim() ? "➤" : "🎤")}
         </button>
       </div>
     </div>

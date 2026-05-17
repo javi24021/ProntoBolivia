@@ -4,22 +4,35 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: $color-bg;
+  background: $wa-bg; // base dark whatsapp background
   font-family: $font-sans;
 }
 
 .body {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(360px, 420px) 1fr;
+  // WhatsApp web typical sidebar width
+  grid-template-columns: minmax(320px, 400px) 1fr;
   overflow: hidden;
 }
 
 .leftPane {
-  overflow: hidden;
-  background: $color-bg;
+  overflow-y: auto;
+  background: $wa-bg;
+  display: flex;
+  flex-direction: column;
+  
+  // Custom scrollbar for dark mode
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.16);
+  }
 }
 
 .rightPane {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }

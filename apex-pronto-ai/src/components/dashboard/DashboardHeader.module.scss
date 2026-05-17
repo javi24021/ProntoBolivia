@@ -5,8 +5,11 @@
   align-items: center;
   justify-content: space-between;
   padding: $spacing-md $spacing-xl;
-  background: $color-surface;
-  border-bottom: 1px solid $color-border;
+  background: $wa-surface; // oscuro whatsapp
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e9edef;
+  min-height: 59px;
+  box-sizing: border-box;
 }
 
 .brand {
@@ -18,13 +21,11 @@
 .logo {
   width: 40px;
   height: 40px;
-  border-radius: $radius-md;
-  background: $color-brand-gradient;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: $font-size-xl;
+  overflow: hidden;
 }
 
 .brandText {
@@ -33,23 +34,24 @@
 }
 
 .brandName {
-  font-size: $font-size-xl;
-  font-weight: 700;
-  color: $color-text-primary;
+  font-size: 16px;
+  font-weight: 500;
+  color: #e9edef;
   margin: 0;
   line-height: 1.2;
 }
 
 .brandTagline {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
+  font-size: 12px;
+  color: #8696a0;
   margin: 0;
 }
 
 .nav {
   display: flex;
   gap: $spacing-xs;
-  margin-left: $spacing-2xl;
+  margin-left: auto;
+  margin-right: auto; // Center navigation
 }
 
 .navItem {
@@ -59,59 +61,58 @@
   padding: $spacing-sm $spacing-md;
   border-radius: $radius-md;
   font-size: $font-size-md;
-  color: $color-text-secondary;
+  color: #8696a0;
   cursor: pointer;
   border: none;
   background: transparent;
   font-family: inherit;
 
   &.active {
-    background: $color-brand-soft;
-    color: $color-brand-soft-text;
-    font-weight: 600;
+    background: rgba(255, 255, 255, 0.05);
+    color: #e9edef;
+    font-weight: 500;
   }
 
   &:hover:not(.active) {
-    background: $color-bg-subtle;
+    background: rgba(255, 255, 255, 0.03);
   }
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
-  margin-left: auto;
+  gap: 10px;
 }
 
 .iconBtn {
   position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: $radius-md;
-  background: $color-bg-subtle;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
   border: none;
-  color: $color-text-secondary;
+  color: #aebac1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 20px;
 
   &:hover {
-    background: $color-border;
+    background: rgba(255, 255, 255, 0.05);
   }
 }
 
 .notifBadge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  background: $color-red;
-  color: #fff;
+  top: 4px;
+  right: 4px;
+  background: $wa-green;
+  color: #111b21;
   font-size: 10px;
   font-weight: 700;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: $radius-pill;
   display: flex;
   align-items: center;

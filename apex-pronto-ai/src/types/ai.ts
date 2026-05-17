@@ -43,6 +43,9 @@ export interface AIResponse {
   shouldAskName: boolean;
   shouldAskClientType: boolean;
   shouldAskCategory: boolean;
+
+  /** Si el cliente dice su nombre (incluso mezclado en un texto largo), extráelo aquí */
+  extractedName?: string | null;
 }
 
 /** Contexto que se le pasa al servicio de IA para decidir */

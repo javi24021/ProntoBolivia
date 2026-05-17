@@ -16,6 +16,21 @@ import { ChatPanel } from "./ChatPanel";
 import styles from "./Dashboard.module.scss";
 import type { Conversation } from "@/types";
 
+function getTypeWeight(type: string | null): number {
+  if (type === "mayorista") return 1;
+  if (type === "minorista") return 2;
+  return 3;
+}
+
+function getLabelWeight(label: string | null): number {
+  if (label === "importante") return 1;
+  if (label === "pedido_pendiente") return 2;
+  if (label === "cotizacion") return 3;
+  if (label === "cliente") return 4;
+  if (label === "no_responder") return 99;
+  return 5;
+}
+
 export function Dashboard() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [updatedAtMap, setUpdatedAtMap] = useState<Map<string, Date | null>>(
@@ -23,6 +38,10 @@ export function Dashboard() {
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [agentId] = useState(() => "agent_" + Math.random().toString(36).substring(2, 9));
+  const [viewMode, setViewMode] = useState<"active" | "blocked">("active");
+  // Map of conversationId -> agentId (other agents viewing that chat)
+  const [viewingMap, setViewingMap] = useState<Map<string, string>>(new Map());
 
   // Listener en tiempo real de la lista de conversaciones
   useEffect(() => {
@@ -57,6 +76,7 @@ export function Dashboard() {
           assignedTo: data.assignedTo ?? null,
           lastAskedClientTypeAt: data.lastAskedClientTypeAt ?? null,
           lastAskedNameAt: data.lastAskedNameAt ?? null,
+          viewingBy: data.viewingBy ?? null,
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
         });
@@ -73,18 +93,48 @@ map.set(d.id, tsDate);
       setUpdatedAtMap(map);
 
       // Auto-selecciona la primera si no hay nada seleccionado
-      if (!selectedId && list.length > 0) {
-        setSelectedId(list[0].id);
-      }
+      setSelectedId((prev) => {
+        if (!prev && list.length > 0) {
+          return list[0].id;
+        }
+        return prev;
+      });
     });
 
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Filtrado en memoria
+  // Separate listener for activeSessions (presence) — completely isolated
+  useEffect(() => {
+    const db = getClientDb();
+    const unsub = onSnapshot(collection(db, "activeSessions"), (snap) => {
+      const map = new Map<string, string>();
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        const sessionAgentId = data.agentId as string;
+        const convId = data.conversationId as string | null;
+        // Only track OTHER agents, not ourselves
+        if (convId && sessionAgentId && sessionAgentId !== agentId) {
+          map.set(convId, sessionAgentId);
+        }
+      });
+      setViewingMap(map);
+    });
+    return () => unsub();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agentId]);
+
+  // Filtrado en memoria y ordenamiento
   const filtered = useMemo(() => {
-    return conversations.filter((c) => {
+    const list = conversations.filter((c) => {
+      // Tab view filter: active hides completed+blocked, blocked shows only blocked
+      if (viewMode === "active") {
+        if (c.status === "blocked" || c.status === "completed") return false;
+      } else {
+        if (c.status !== "blocked") return false;
+      }
+
       if (filters.search) {
         const haystack = `${c.customerName ?? ""} ${c.phone}`.toLowerCase();
         if (!haystack.includes(filters.search.toLowerCase())) return false;
@@ -98,7 +148,23 @@ map.set(d.id, tsDate);
         return false;
       return true;
     });
-  }, [conversations, filters]);
+
+    list.sort((a, b) => {
+      const typeA = getTypeWeight(a.currentClientType);
+      const typeB = getTypeWeight(b.currentClientType);
+      if (typeA !== typeB) return typeA - typeB;
+
+      const labelA = getLabelWeight(a.label);
+      const labelB = getLabelWeight(b.label);
+      if (labelA !== labelB) return labelA - labelB;
+
+      const timeA = updatedAtMap.get(a.id)?.getTime() ?? 0;
+      const timeB = updatedAtMap.get(b.id)?.getTime() ?? 0;
+      return timeB - timeA;
+    });
+
+    return list;
+  }, [conversations, filters, updatedAtMap]);
 
   const selected = useMemo(
     () => conversations.find((c) => c.id === selectedId) ?? null,
@@ -119,10 +185,13 @@ map.set(d.id, tsDate);
             selectedId={selectedId}
             onSelect={setSelectedId}
             updatedAtMap={updatedAtMap}
+            viewingMap={viewingMap}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
           />
         </div>
         <div className={styles.rightPane}>
-          <ChatPanel conversation={selected} />
+          <ChatPanel conversation={selected} agentId={agentId} />
         </div>
       </div>
     </div>

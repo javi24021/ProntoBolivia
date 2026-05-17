@@ -4,133 +4,255 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: $color-bg;
+  background: #f0f2f5;
   font-family: $font-sans;
+  position: relative;
+  overflow: hidden;
 }
 
+// ── Header (WhatsApp Style) ──────────────────────────────────
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $spacing-md $spacing-lg;
-  background: $color-surface;
-  border-bottom: 1px solid $color-border;
-  box-shadow: $shadow-sm;
+  padding: 10px 16px;
+  background: $wa-surface; // oscuro
+  color: #e9edef;
+  z-index: 10;
 }
 
 .headerLeft {
   display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.titleWrap {
+  display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 .title {
-  font-size: $font-size-lg;
-  font-weight: 600;
-  color: $color-text-primary;
+  font-size: 16px;
+  font-weight: 500;
   margin: 0;
+  color: #e9edef;
 }
 
 .subtitle {
-  font-size: 12px;
-  color: $color-text-secondary;
+  font-size: 13px;
+  color: #8696a0;
   margin: 0;
 }
 
 .headerRight {
   display: flex;
   gap: $spacing-sm;
+  align-items: center;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  color: #aebac1;
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
 }
 
 .resetBtn {
-  padding: $spacing-xs $spacing-md;
-  background: transparent;
-  color: $color-text-secondary;
-  border: 1px solid $color-border;
-  border-radius: $radius-sm;
-  font-size: $font-size-sm;
-  cursor: pointer;
+  @extend .iconBtn;
+}
 
-  &:hover {
-    background: $color-bg-subtle;
-    color: $color-text-primary;
+// ── Identity Floating Pill ───────────────────────────────────
+.identityWrapper {
+  position: absolute;
+  top: 70px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.identityPill {
+  display: inline-flex;
+  gap: $spacing-md;
+  padding: 6px 12px;
+  background: rgba(17, 27, 33, 0.6);
+  border-radius: $radius-pill;
+  font-size: 12px;
+  color: #e9edef;
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+
+  span {
+    display: flex;
+    align-items: center;
   }
 }
 
-.identityRow {
+// ── Chat Area Background ─────────────────────────────────────
+.messagesBg {
+  flex: 1;
+  position: relative;
+  background-image: url('/fondoWhatsapp.jpg');
+  background-size: 400px; // Tamaño fijo para que se repita correctamente
+  background-position: center;
+  background-repeat: repeat;
+  overflow: hidden;
   display: flex;
-  gap: $spacing-sm;
-  padding: $spacing-md $spacing-lg;
-  background: $color-surface;
-  border-bottom: 1px solid $color-border;
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
+  flex-direction: column;
+}
 
-  span {
-    display: inline-flex;
-    align-items: center;
-    gap: $spacing-xs;
-    background: $color-bg-subtle;
-    padding: 2px $spacing-sm;
-    border-radius: $radius-sm;
-  }
+.messagesOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 20, 26, 0.4); // Oscurecer un poco para que los textos resalten
+  pointer-events: none;
 }
 
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: $spacing-lg;
+  padding: $spacing-xl 5%;
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  position: relative;
+  z-index: 2;
+
+  // Personalización del scrollbar (WhatsApp dark mode)
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.16);
+    border-radius: 3px;
+  }
 }
 
-.emptyState {
-  margin: auto;
+// System messages (Encryption notice)
+.systemRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: $spacing-xl;
+  margin-top: $spacing-sm;
+}
+
+.systemPill {
+  background: #182229; // WhatsApp dark yellow-ish for encryption? actually it's dark
+  color: #ffd279;
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 8px;
   text-align: center;
-  color: $color-text-muted;
-  max-width: 320px;
-  line-height: 1.5;
+  max-width: 85%;
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+}
+
+
+
+
+// ── Composer (WhatsApp input area) ───────────────────────────
+.composerWrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: $spacing-sm;
+  padding: 10px;
+  background: $wa-surface;
+  z-index: 10;
 }
 
 .composer {
+  flex: 1;
   display: flex;
-  gap: $spacing-sm;
-  padding: $spacing-md $spacing-lg;
-  background: $color-surface;
-  border-top: 1px solid $color-border;
+  align-items: center;
+  background: #2a3942;
+  border-radius: 24px;
+  padding: 0 8px;
+  min-height: 48px;
+}
+
+.attachBtn {
+  background: transparent;
+  border: none;
+  color: #8696a0;
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &:hover {
+    color: #d1d7db;
+  }
 }
 
 .input {
   flex: 1;
-  padding: $spacing-sm $spacing-md;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  font-size: $font-size-md;
-  font-family: inherit;
+  background: transparent;
+  border: none;
+  color: #e9edef;
+  font-size: 15px;
+  padding: 12px 8px;
   outline: none;
+  font-family: inherit;
 
-  &:focus {
-    border-color: $color-brand;
+  &::placeholder {
+    color: #8696a0;
   }
-
+  
   &:disabled {
-    background: $color-bg-subtle;
+    opacity: 0.5;
   }
 }
 
 .sendBtn {
-  padding: $spacing-sm $spacing-lg;
-  background: $color-brand;
-  color: #fff;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #00a884;
+  color: #111b21;
   border: none;
-  border-radius: $radius-md;
-  font-size: $font-size-md;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
   cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
 
   &:hover:not(:disabled) {
-    background: $color-brand-hover;
+    background: #00bfa5;
+  }
+
+  &.active {
+    background: #00a884;
+    color: #111b21;
   }
 
   &:disabled {
@@ -140,9 +262,17 @@
 }
 
 .errorBanner {
-  padding: $spacing-sm $spacing-lg;
-  background: rgba(239, 68, 68, 0.1);
-  color: $color-red;
-  font-size: $font-size-sm;
+  position: absolute;
+  top: 70px;
+  left: 20px;
+  right: 20px;
+  z-index: 20;
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  padding: 12px;
+  border-radius: $radius-md;
   text-align: center;
+  font-weight: 500;
+  box-shadow: $shadow-lg;
+  backdrop-filter: blur(4px);
 }

@@ -1,7 +1,9 @@
 @use "@/styles/variables" as *;
 
+// ── Rows ─────────────────────────────────────────────────────
 .row {
   display: flex;
+  margin-bottom: 2px;
 
   &.user {
     justify-content: flex-end;
@@ -10,51 +12,95 @@
   &.bot {
     justify-content: flex-start;
   }
-
-  &.system {
-    justify-content: center;
-  }
 }
 
+.systemRow {
+  display: flex;
+  justify-content: center;
+  margin: $spacing-sm 0;
+}
+
+.systemPill {
+  background: rgba(17, 27, 33, 0.55);
+  color: #e9edef;
+  font-size: $font-size-xs;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-pill;
+  backdrop-filter: blur(4px);
+  text-align: center;
+  max-width: 80%;
+}
+
+// ── Bubbles ──────────────────────────────────────────────────
 .bubble {
-  max-width: 75%;
-  padding: $spacing-sm $spacing-md;
-  border-radius: $radius-bubble;
+  position: relative;
+  max-width: 72%;
+  padding: 6px $spacing-md 22px $spacing-md; // bottom space for meta
+  border-radius: $radius-lg;
   font-size: $font-size-md;
   line-height: 1.45;
   word-wrap: break-word;
   white-space: pre-wrap;
   box-shadow: $shadow-xs;
 
+  // ── Tail (chat tail via pseudo-element) ──────────────────
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    width: 0;
+    height: 0;
+  }
+
   &.user {
-    background: $color-bubble-user-bg;
-    color: $color-bubble-user-text;
+    background: #d9fdd3;
+    color: #111827;
     border-bottom-right-radius: $radius-sm;
+
+    &::after {
+      right: -8px;
+      border-top: 8px solid transparent;
+      border-left: 9px solid #d9fdd3;
+    }
   }
 
   &.bot {
-    background: $color-bubble-bot-bg;
-    color: $color-bubble-bot-text;
+    background: #ffffff;
+    color: #111827;
     border-bottom-left-radius: $radius-sm;
-  }
 
-  &.system {
-    background: transparent;
-    color: $color-text-muted;
-    font-size: $font-size-sm;
-    font-style: italic;
-    box-shadow: none;
+    &::after {
+      left: -8px;
+      border-top: 8px solid transparent;
+      border-right: 9px solid #ffffff;
+    }
   }
 }
 
+.text {
+  display: block;
+}
+
+// ── Meta line (time + ticks) ─────────────────────────────────
 .meta {
+  position: absolute;
+  bottom: 5px;
+  right: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: 3px;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: $spacing-xs;
-  text-align: right;
+  color: #54656f;
+  white-space: nowrap;
+  line-height: 1;
+
+  .user & {
+    color: #54656f;
+  }
 }
 
-.bot .meta,
-.system .meta {
-  color: $color-text-muted;
+.ticks {
+  color: #53bdeb; // WhatsApp blue ticks
+  vertical-align: middle;
+  margin-left: 1px;
 }

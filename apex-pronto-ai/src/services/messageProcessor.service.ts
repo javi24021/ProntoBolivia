@@ -231,6 +231,24 @@ export async function processIncomingMessage(
     if (!convResult.ok) return convResult;
     let conversation = convResult.data;
 
+    /* ------------------------------------------------------------
+     * 2a. Conversación bloqueada: no procesamos nada, informamos
+     * ---------------------------------------------------------- */
+    if (conversation.status === "blocked") {
+      return {
+        ok: true,
+        data: {
+          conversationId: conversation.id,
+          customerId: customer.id,
+          reply: "Lo sentimos, este servicio de atención ha sido suspendido temporalmente. Para más información, comunícate con nosotros por otro medio.",
+          requiresHuman: false,
+          status: "blocked" as const,
+          catalogUrl: null,
+          aiResponse: buildBlockedAIResponse(),
+        },
+      };
+    }
+
     // Si la conversación se creó sin customerId/Name (por alguna razón), corregir
     if (!conversation.customerId || conversation.customerName !== customer.name) {
       await updateConversation(conversation.id, {
@@ -242,6 +260,24 @@ export async function processIncomingMessage(
         customerId: customer.id,
         customerName: customer.name,
       };
+    }
+
+    /* ------------------------------------------------------------
+     * 2b. Chequeo de caducidad (Staleness)
+     * Si pasaron más de 24 horas desde el último mensaje,
+     * reiniciamos preferencias para que la IA repregunte.
+     * ---------------------------------------------------------- */
+    const lastUpdate = conversation.updatedAt instanceof Timestamp 
+      ? conversation.updatedAt.toDate() 
+      : (conversation.updatedAt as Date | null);
+      
+    if (lastUpdate && conversation.lastMessage) {
+      const hoursSince = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60);
+      if (hoursSince >= 24) {
+         conversation.currentClientType = "desconocido";
+         conversation.category = "desconocido";
+         log("info", "messageProcessor", "Conversación caduca, reseteando preferencias", { hoursSince });
+      }
     }
 
     /* ------------------------------------------------------------
@@ -324,6 +360,24 @@ export async function processIncomingMessage(
       history,
       userMessage: input.text,
     });
+
+    /* ------------------------------------------------------------
+     * 7b. Capturar nombre desde la IA si la heurística falló
+     * ---------------------------------------------------------- */
+    if (!customer.name && ai.extractedName) {
+      // Limpiar el nombre extraído (capitalización simple)
+      const cleanName = ai.extractedName.trim().split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+      if (cleanName) {
+        await updateCustomer(customer.id, { name: cleanName });
+        customer = { ...customer, name: cleanName };
+        await updateConversation(conversation.id, { customerName: cleanName });
+        conversation = { ...conversation, customerName: cleanName };
+        log("info", "messageProcessor", "Nombre capturado por IA", {
+          customerId: customer.id,
+          name: cleanName,
+        });
+      }
+    }
 
     /* ------------------------------------------------------------
      * 8. Aplicar reglas sobre la respuesta de la IA

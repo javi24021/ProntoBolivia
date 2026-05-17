@@ -41,6 +41,7 @@ function fromFirestore(
     assignedTo: (data.assignedTo as string | null) ?? null,
     lastAskedClientTypeAt: (data.lastAskedClientTypeAt as Timestamp | null) ?? null,
     lastAskedNameAt: (data.lastAskedNameAt as Timestamp | null) ?? null,
+    viewingBy: (data.viewingBy as string | null) ?? null,
     createdAt: data.createdAt as Timestamp,
     updatedAt: data.updatedAt as Timestamp,
   };

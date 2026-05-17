@@ -4,9 +4,9 @@
   display: flex;
   align-items: center;
   gap: $spacing-md;
-  padding: $spacing-md $spacing-xl;
-  background: $color-surface;
-  border-bottom: 1px solid $color-border;
+  padding: 8px 12px;
+  background: $wa-bg;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-wrap: wrap;
 }
 
@@ -17,43 +17,51 @@
 
   input {
     width: 100%;
-    padding: $spacing-sm $spacing-md $spacing-sm 36px;
-    border: 1px solid $color-border;
-    border-radius: $radius-md;
-    font-size: $font-size-md;
+    padding: 8px 16px 8px 48px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
     font-family: inherit;
     outline: none;
-    background: $color-surface;
+    background: #202c33;
+    color: #e9edef;
+    height: 35px;
+
+    &::placeholder {
+      color: #8696a0;
+    }
 
     &:focus {
-      border-color: $color-brand;
+      background: #2a3942;
     }
   }
 
   &::before {
     content: "🔍";
     position: absolute;
-    left: $spacing-md;
+    left: 16px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 14px;
     pointer-events: none;
+    color: #8696a0;
   }
 }
 
 .select {
-  padding: $spacing-sm $spacing-md;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  font-size: $font-size-md;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
   font-family: inherit;
-  background: $color-surface;
-  color: $color-text-primary;
+  background: #202c33;
+  color: #e9edef;
   cursor: pointer;
   outline: none;
-  min-width: 150px;
+  min-width: 130px;
+  height: 35px;
 
   &:focus {
-    border-color: $color-brand;
+    background: #2a3942;
   }
 }

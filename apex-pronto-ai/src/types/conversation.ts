@@ -102,9 +102,10 @@ export interface Conversation {
   /** ID del asesor humano asignado, si lo hay */
   assignedTo: string | null;
 
-  /** Marcas para evitar repreguntar lo mismo en bucle */
   lastAskedClientTypeAt: FirestoreDate | null;
   lastAskedNameAt: FirestoreDate | null;
+  
+  viewingBy?: string | null;
 
   createdAt: FirestoreDate;
   updatedAt: FirestoreDate;
