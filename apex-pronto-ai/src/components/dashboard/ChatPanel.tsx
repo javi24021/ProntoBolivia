@@ -40,10 +40,7 @@ export function ChatPanel({ conversation, agentId }: { conversation: Conversatio
   const [showBlockModal, setShowBlockModal] = useState(false);
 
   useEffect(() => {
-    if (!conversation) {
-      setMessages([]);
-      return;
-    }
+    if (!conversation) return;
 
     const db = getClientDb();
     const q = query(

@@ -39,5 +39,12 @@ const m4 = await processIncomingMessage({
           requiresHuman: m3.data.requiresHuman,
         }
       : m3,
+    step4: m4.ok
+      ? {
+          reply: m4.data.reply,
+          status: m4.data.status,
+          requiresHuman: m4.data.requiresHuman,
+        }
+      : m4,
   });
 }

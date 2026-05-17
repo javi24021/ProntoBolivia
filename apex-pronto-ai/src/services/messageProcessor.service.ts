@@ -16,7 +16,6 @@ import type {
   AIResponse,
   Channel,
   Conversation,
-  Customer,
   Priority,
   ServiceResult,
 } from "@/types";

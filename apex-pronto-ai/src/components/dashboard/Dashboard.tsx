@@ -96,7 +96,6 @@ map.set(d.id, tsDate);
     });
 
     return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Separate listener for activeSessions (presence) — completely isolated
@@ -116,7 +115,6 @@ map.set(d.id, tsDate);
       setViewingMap(map);
     });
     return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agentId]);
 
   // Filtrado en memoria y ordenamiento
@@ -160,23 +158,11 @@ map.set(d.id, tsDate);
     return list;
   }, [conversations, filters, updatedAtMap, viewMode]);
 
-  // Si el chat seleccionado no está en la lista filtrada actual (por ejemplo, al cambiar de pestaña),
-  // auto-selecciona el primer chat de la nueva lista filtrada.
-  useEffect(() => {
-    if (filtered.length > 0) {
-      const isSelectedInFiltered = filtered.some((c) => c.id === selectedId);
-      if (!isSelectedInFiltered) {
-        setSelectedId(filtered[0].id);
-      }
-    } else {
-      setSelectedId(null);
-    }
-  }, [filtered, selectedId]);
-
-  const selected = useMemo(
-    () => conversations.find((c) => c.id === selectedId) ?? null,
-    [conversations, selectedId]
-  );
+  const selected = useMemo(() => {
+    if (!selectedId) return filtered[0] ?? null;
+    const match = conversations.find((c) => c.id === selectedId);
+    return match ?? filtered[0] ?? null;
+  }, [conversations, selectedId, filtered]);
 
   const totalUnread = conversations.reduce((s, c) => s + (c.unreadCount ?? 0), 0);
 
@@ -198,7 +184,7 @@ map.set(d.id, tsDate);
           />
         </div>
         <div className={styles.rightPane}>
-          <ChatPanel conversation={selected} agentId={agentId} />
+          <ChatPanel key={selected?.id ?? 'none'} conversation={selected} agentId={agentId} />
         </div>
       </div>
     </div>

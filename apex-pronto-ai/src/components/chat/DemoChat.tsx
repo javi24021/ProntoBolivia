@@ -51,55 +51,58 @@ export function DemoChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Initialize from localStorage on mount (client-side only)
+  // Deferred via queueMicrotask so it's not synchronous setState in effect
   useEffect(() => {
-    const stored = localStorage.getItem(PHONE_KEY);
-    let currentPhone = stored;
-    if (stored) {
-      setPhone(stored);
-    } else {
-      const fresh = generateDemoPhone();
-      localStorage.setItem(PHONE_KEY, fresh);
-      setPhone(fresh);
-      currentPhone = fresh;
-    }
-    setName(localStorage.getItem(NAME_KEY) ?? "");
-
-    if (currentPhone) {
-      const loadHistory = async () => {
-        try {
-          const db = getClientDb();
-          const qConv = query(collection(db, "conversations"), where("phone", "==", currentPhone), limit(1));
-          const snapConv = await getDocs(qConv);
-          
-          if (snapConv.empty) return;
-          
-          const convId = snapConv.docs[0].id;
-          const qMsgs = query(collection(db, "conversations", convId, "messages"), orderBy("createdAt", "asc"));
-          const snapMsgs = await getDocs(qMsgs);
-          
-          const history: UIMessage[] = snapMsgs.docs.map((d) => {
-            const data = d.data();
-            let ts = "";
-            if (data.createdAt && typeof data.createdAt.toDate === "function") {
-              const date = (data.createdAt as Timestamp).toDate();
-              ts = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-            }
-            return {
-              id: d.id,
-              role: data.role === "user" ? "user" : data.role === "system" ? "system" : "bot",
-              text: data.text,
-              timestamp: ts || nowHHmm(),
-            };
-          });
-          
-          setMessages(history);
-        } catch (err) {
-          console.error("Error cargando historial de chat:", err);
-        }
-      };
-      loadHistory();
-    }
+    queueMicrotask(() => {
+      const stored = localStorage.getItem(PHONE_KEY);
+      if (stored) {
+        setPhone(stored);
+      } else {
+        const fresh = generateDemoPhone();
+        localStorage.setItem(PHONE_KEY, fresh);
+        setPhone(fresh);
+      }
+      setName(localStorage.getItem(NAME_KEY) ?? "");
+    });
   }, []);
+
+  useEffect(() => {
+    if (!phone) return;
+    const loadHistory = async () => {
+      try {
+        const db = getClientDb();
+        const qConv = query(collection(db, "conversations"), where("phone", "==", phone), limit(1));
+        const snapConv = await getDocs(qConv);
+        
+        if (snapConv.empty) return;
+        
+        const convId = snapConv.docs[0].id;
+        const qMsgs = query(collection(db, "conversations", convId, "messages"), orderBy("createdAt", "asc"));
+        const snapMsgs = await getDocs(qMsgs);
+        
+        const history: UIMessage[] = snapMsgs.docs.map((d) => {
+          const data = d.data();
+          let ts = "";
+          if (data.createdAt && typeof data.createdAt.toDate === "function") {
+            const date = (data.createdAt as Timestamp).toDate();
+            ts = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+          }
+          return {
+            id: d.id,
+            role: data.role === "user" ? "user" : data.role === "system" ? "system" : "bot",
+            text: data.text,
+            timestamp: ts || nowHHmm(),
+          };
+        });
+        
+        setMessages(history);
+      } catch (err) {
+        console.error("Error cargando historial de chat:", err);
+      }
+    };
+    loadHistory();
+  }, [phone]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
