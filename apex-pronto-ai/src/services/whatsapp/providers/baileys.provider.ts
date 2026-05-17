@@ -74,14 +74,27 @@ export async function initBaileys() {
     }
 
     if (connection === "close") {
-      const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
-      log("warn", "baileys.provider", "Conexión cerrada", { reason: lastDisconnect?.error, shouldReconnect });
+      const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
+      const isLogout = statusCode === DisconnectReason.loggedOut;
+      const isAuthFailure = statusCode === 401;
+
+      log("warn", "baileys.provider", "Conexión cerrada", { statusCode, isLogout, isAuthFailure });
       
       globalForBaileys.connectionStatus = "disconnected";
       globalForBaileys.baileysSocket = undefined;
+      globalForBaileys.qrBase64 = undefined;
 
-      if (shouldReconnect) {
-        initBaileys();
+      // Si la sesión fue cerrada o falló la autenticación (401), limpiamos credenciales para regenerar QR
+      if (isLogout || isAuthFailure) {
+        log("info", "baileys.provider", "Limpiando sesión expirada...");
+        if (fs.existsSync(sessionDir)) {
+          fs.rmSync(sessionDir, { recursive: true, force: true });
+        }
+      }
+
+      // Reintentar conexión si no fue un logout manual
+      if (!isLogout) {
+        setTimeout(() => initBaileys(), 2000);
       }
     } else if (connection === "open") {
       log("info", "baileys.provider", "✅ Conectado a WhatsApp");

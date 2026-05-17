@@ -5,6 +5,8 @@ import {
   takeOver,
 } from "@/services/conversation.service";
 import { log } from "@/lib/utils";
+import { db } from "@/lib/firebase";
+import { whatsappService } from "@/services/whatsapp/whatsapp.service";
 
 /**
  * POST /api/send-as-human

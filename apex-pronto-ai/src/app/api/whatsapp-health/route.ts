@@ -23,10 +23,8 @@ export async function GET(req: NextRequest) {
 
   if (action === "getQR") {
     const result = await whatsappService.getConnectionQR();
-    return NextResponse.json(
-      { ok: result.state !== "error", data: result },
-      { status: result.state === "error" ? 500 : 200 }
-    );
+    // No devolvemos 500 si es 'error' o 'generating', para que el polling del frontend siga vivo
+    return NextResponse.json({ ok: true, data: result });
   }
 
   if (action === "syncWebhook") {
