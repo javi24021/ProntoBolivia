@@ -1,0 +1,43 @@
+@use "@/styles/variables" as *;
+
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: $color-text-muted;
+
+  &.ok {
+    background: $color-green;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+  }
+  &.warn {
+    background: $color-yellow;
+  }
+  &.err {
+    background: $color-red;
+  }
+}
+
+.label {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: 500;
+}
+
+.demoMode {
+  display: inline-block;
+  margin-left: $spacing-sm;
+  padding: 2px $spacing-sm;
+  background: $color-yellow-soft;
+  color: $color-yellow-soft-text;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: $radius-sm;
+  text-transform: uppercase;
+}

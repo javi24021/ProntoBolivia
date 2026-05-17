@@ -1,0 +1,120 @@
+@use "@/styles/variables" as *;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-xl;
+  background: $wa-surface; // oscuro whatsapp
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e9edef;
+  min-height: 59px;
+  box-sizing: border-box;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-size: 16px;
+  font-weight: 500;
+  color: #e9edef;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.brandTagline {
+  font-size: 12px;
+  color: #8696a0;
+  margin: 0;
+}
+
+.nav {
+  display: flex;
+  gap: $spacing-xs;
+  margin-left: auto;
+  margin-right: auto; // Center navigation
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: #8696a0;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+
+  &.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e9edef;
+    font-weight: 500;
+  }
+
+  &:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconBtn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #aebac1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.notifBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: $wa-green;
+  color: #111b21;
+  font-size: 10px;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: $radius-pill;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

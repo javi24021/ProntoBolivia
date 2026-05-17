@@ -1,0 +1,167 @@
+@use "@/styles/variables" as *;
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: 12px 16px;
+  background: $wa-bg;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  position: relative;
+
+  &:hover {
+    background: #202c33; // whatsapp hover state
+  }
+
+  &.selected {
+    background: #2a3942; // whatsapp selected state
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #dfe5e7;
+  color: #54656f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.nameWrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.nameRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2px;
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 400;
+  color: #e9edef;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.time {
+  font-size: 11px;
+  color: #8696a0;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.subtitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #8696a0;
+}
+
+.channelLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rightIndicators {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unread {
+  background: #00a884;
+  color: #111b21;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: $radius-pill;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  padding-left: 63px; // Align with text
+}
+
+.lastMessage {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: 13px;
+  color: #8696a0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 63px; // Align with text
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #8696a0;
+  margin-top: $spacing-xs;
+  padding-top: $spacing-xs;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.viewingAlert {
+  color: #34b7f1;
+  font-weight: 500;
+  animation: pulse-slow 2s infinite;
+}
+
+.humanAlert {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.botAlert {
+  color: #00a884;
+  font-weight: 500;
+  animation: pulse-slow 3s infinite;
+}
+
+@keyframes pulse-slow {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}

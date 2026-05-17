@@ -1,0 +1,38 @@
+@use "@/styles/variables" as *;
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: $wa-bg; // base dark whatsapp background
+  font-family: $font-sans;
+}
+
+.body {
+  flex: 1;
+  display: grid;
+  // WhatsApp web typical sidebar width
+  grid-template-columns: minmax(320px, 400px) 1fr;
+  overflow: hidden;
+}
+
+.leftPane {
+  overflow-y: auto;
+  background: $wa-bg;
+  display: flex;
+  flex-direction: column;
+  
+  // Custom scrollbar for dark mode
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.16);
+  }
+}
+
+.rightPane {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,74 @@
+@use "@/styles/variables" as *;
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg $spacing-sm;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: $font-size-lg;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.count {
+  color: $color-text-secondary;
+  font-weight: 500;
+  font-size: $font-size-md;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.tab {
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  color: #8696a0;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #e9edef;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.tabActive {
+  background: #00a884 !important;
+  color: #111b21 !important;
+}
+
+.tabBlocked {
+  background: #ef4444 !important;
+  color: #fff !important;
+}
+
+.empty {
+  text-align: center;
+  color: $color-text-muted;
+  padding: $spacing-2xl $spacing-lg;
+  font-size: $font-size-md;
+}

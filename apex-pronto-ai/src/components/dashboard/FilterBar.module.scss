@@ -1,0 +1,67 @@
+@use "@/styles/variables" as *;
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: 8px 12px;
+  background: $wa-bg;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+}
+
+.search {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+
+  input {
+    width: 100%;
+    padding: 8px 16px 8px 48px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    background: #202c33;
+    color: #e9edef;
+    height: 35px;
+
+    &::placeholder {
+      color: #8696a0;
+    }
+
+    &:focus {
+      background: #2a3942;
+    }
+  }
+
+  &::before {
+    content: "🔍";
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;
+    color: #8696a0;
+  }
+}
+
+.select {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #202c33;
+  color: #e9edef;
+  cursor: pointer;
+  outline: none;
+  min-width: 130px;
+  height: 35px;
+
+  &:focus {
+    background: #2a3942;
+  }
+}
