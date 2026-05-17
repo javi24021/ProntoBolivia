@@ -1,5 +1,6 @@
 "use client";
 
+import { HealthIndicator } from "./HealthIndicator";
 import styles from "./DashboardHeader.module.scss";
 
 export function DashboardHeader({
@@ -30,6 +31,7 @@ export function DashboardHeader({
       </nav>
 
       <div className={styles.actions}>
+        <HealthIndicator />
         <button className={styles.iconBtn} type="button" title="Refrescar">
           🔄
         </button>
