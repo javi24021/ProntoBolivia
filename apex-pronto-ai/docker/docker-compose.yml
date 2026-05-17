@@ -1,0 +1,65 @@
+services:
+
+  # ── Evolution API v1.8.2 (Estable, sin dependencias extra) ──────────────────
+  evolution:
+    image: atendai/evolution-api:v1.8.2
+    container_name: pronto_evolution
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - evolution_instances:/evolution/instances
+      - evolution_store:/evolution/store
+    environment:
+      SERVER_TYPE: "http"
+      SERVER_PORT: "8080"
+      SERVER_URL: "http://localhost:8080"
+
+      AUTHENTICATION_TYPE: "apikey"
+      AUTHENTICATION_API_KEY: "pronto-secret-key-2024"
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: "true"
+
+      LOG_LEVEL: "ERROR,WARN,DEBUG,INFO,LOG"
+      LOG_COLOR: "true"
+
+      QRCODE_LIMIT: "30"
+      QRCODE_COLOR: "#128C7E"
+
+      WEBHOOK_GLOBAL_URL: "http://n8n:5678/webhook/whatsapp"
+      WEBHOOK_GLOBAL_ENABLED: "true"
+      WEBHOOK_EVENTS_MESSAGES_UPSERT: "true"
+      WEBHOOK_EVENTS_MESSAGES_UPDATE: "false"
+
+    networks:
+      - pronto_net
+
+  # ── n8n ──────────────────────────────────────────────────────────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: pronto_n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      N8N_HOST: "localhost"
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: "http"
+      WEBHOOK_URL: "http://localhost:5678/"
+      GENERIC_TIMEZONE: "America/La_Paz"
+      TZ: "America/La_Paz"
+      N8N_BASIC_AUTH_ACTIVE: "false"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - pronto_net
+
+volumes:
+  evolution_instances:
+  evolution_store:
+  n8n_data:
+
+networks:
+  pronto_net:
+    driver: bridge
