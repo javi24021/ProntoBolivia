@@ -36,42 +36,62 @@ function isValidChannel(value: unknown): value is Channel {
   );
 }
 
-function validateBody(body: InboundBody): ValidationResult {
-  if (!isValidChannel(body.channel)) {
+function validateBody(body: any): ValidationResult {
+  let phone = body.phone;
+  let text = body.text;
+  let name = body.name;
+  let channel = body.channel;
+
+  // Detección automática de payload de Evolution API
+  // Evolution envía el objeto mensaje directamente cuando webhook_by_events=false
+  if (body.key && body.message) {
+    // Evitar procesar estados o mensajes enviados por nosotros mismos
+    if (body.key.fromMe || body.key.remoteJid === "status@broadcast") {
+      return { ok: false, error: "ignored_event" };
+    }
+
+    phone = body.key.remoteJid?.split("@")[0];
+    
+    // Extraer texto dependiendo del tipo de mensaje (texto simple o con menciones)
+    text = body.message?.conversation 
+      || body.message?.extendedTextMessage?.text
+      || "";
+      
+    name = body.pushName || null;
+    channel = "WhatsApp";
+  }
+
+  if (!isValidChannel(channel)) {
     return {
       ok: false,
       error: `Campo 'channel' inválido. Valores aceptados: ${CHANNELS.join(", ")}`,
     };
   }
-  if (typeof body.phone !== "string" || body.phone.trim() === "") {
+  if (typeof phone !== "string" || phone.trim() === "") {
     return {
       ok: false,
       error: "Campo 'phone' es requerido y debe ser string no vacío",
     };
   }
-  if (typeof body.text !== "string" || body.text.trim() === "") {
+  if (typeof text !== "string" || text.trim() === "") {
     return {
       ok: false,
       error: "Campo 'text' es requerido y debe ser string no vacío",
     };
   }
-  if (body.text.length > 2000) {
+  if (text.length > 2000) {
     return {
       ok: false,
       error: "Campo 'text' excede el límite de 2000 caracteres",
     };
   }
-  const name =
-    typeof body.name === "string" && body.name.trim() !== ""
-      ? body.name.trim()
-      : null;
 
   return {
     ok: true,
-    channel: body.channel,
-    phone: body.phone.trim(),
-    text: body.text.trim(),
-    name,
+    channel: channel,
+    phone: phone.trim(),
+    text: text.trim(),
+    name: typeof name === "string" ? name.trim() : null,
   };
 }
 
@@ -89,6 +109,11 @@ export async function POST(req: NextRequest) {
 
   const validation = validateBody(body);
   if (!validation.ok) {
+    if (validation.error === "ignored_event") {
+      // Devolver 200 OK silencioso para eventos que no nos interesan
+      // así Evolution API no se queda atascada reintentando
+      return NextResponse.json({ ok: true, ignored: true });
+    }
     return NextResponse.json(
       { ok: false, error: validation.error },
       { status: 400 }

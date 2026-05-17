@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { HealthIndicator } from "./HealthIndicator";
+import { WhatsAppConfigModal } from "./WhatsAppConfigModal";
 import styles from "./DashboardHeader.module.scss";
 
 export function DashboardHeader({
@@ -8,6 +10,8 @@ export function DashboardHeader({
 }: {
   notifCount?: number;
 }) {
+  const [showConfig, setShowConfig] = useState(false);
+
   return (
     <header className={styles.header}>
       <div className={styles.brand}>
@@ -41,10 +45,19 @@ export function DashboardHeader({
             <span className={styles.notifBadge}>{notifCount}</span>
           )}
         </button>
-        <button className={styles.iconBtn} type="button" title="Ajustes">
+        <button 
+          className={styles.iconBtn} 
+          type="button" 
+          title="Ajustes"
+          onClick={() => setShowConfig(true)}
+        >
           ⚙️
         </button>
       </div>
+
+      {showConfig && (
+        <WhatsAppConfigModal onClose={() => setShowConfig(false)} />
+      )}
     </header>
   );
 }
